@@ -72,6 +72,8 @@
         ok-title="Actualizar"
         cancel-title="Cancelar"
         @ok="handleOk"
+        @show="resetModal"
+        @hidden="resetModal"
       >
         <form ref="form" @submit.stop.prevent="handleSubmit">
          
@@ -206,6 +208,11 @@ export default {
         await this.listarTipoUbicacion();
         this.$root.$emit('bv::show::modal', 'modal', '#btnShow')
        
+      },
+      resetModal() {
+        this.messageById = null;
+        this.errorsById  = null;
+        console.log('cerrar modal');
       },
       checkFormValidity() {
         const valid = this.$refs.form.checkValidity()
