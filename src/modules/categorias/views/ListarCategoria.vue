@@ -20,9 +20,9 @@
           <div class="card">
             <div class="card-body">
            
-           
-                <table class="table table-striped" v-if="categorias.data">
-                <thead>
+                <template v-if="categorias.data">
+                  <table class="table table-striped" >
+                    <thead>
                         <tr>
                         <th scope="col">#Id</th>
                         <th scope="col">Nombre</th>
@@ -36,10 +36,19 @@
                             <td> {{  item.descripcion  }}</td>
                         </tr>
                        
-                    </tbody>
-                </table>
-                <pagination :data="categorias" @pagination-change-page="getResults"></pagination>
-            
+                     </tbody>
+                   </table>
+                   <pagination :data="categorias" @pagination-change-page="getResults"></pagination>
+                </template>
+
+                <!---<div v-else class="d-flex justify-content-center">
+                    <div class="spinner-border text-secondary"  style="width: 3rem; height: 3rem;" role="status">
+                        <span class="sr-only">Cargando...</span>
+                    </div>
+                </div>
+              -->
+              <Spinner v-else/>
+                
             </div>
           </div>
         </div>
@@ -52,11 +61,13 @@
 <script>
 
 import ApiPublic from '@/api/ApiPublic'
+import Spinner   from '@/components/loading/Spinner.vue'
 
 export default {
 
     name: "ListarMarca",
     components: {
+      Spinner
     },
 
     data() {

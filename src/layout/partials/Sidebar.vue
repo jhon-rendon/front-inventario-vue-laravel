@@ -81,6 +81,45 @@
           </b-collapse>
         </li>
 
+        
+        <li class="nav-item">
+          <span class="nav-link" v-b-toggle="'TipoUbicacion'">
+            <span class="menu-title">Tipo Ubicación</span>
+            <i class="menu-arrow"></i>
+            <i class="mdi mdi-crosshairs-gps menu-icon"></i>
+          </span>
+          <b-collapse accordion="sidebar-accordion" id="TipoUbicacion">
+            <ul class="nav flex-column sub-menu">
+              <li class="nav-item">
+                <router-link class="nav-link" to="/tipo-ubicacion/registrar/">Crear</router-link>
+              </li>
+              <li class="nav-item">
+                <router-link class="nav-link" to="/tipo-ubicacion/listar/">Listar</router-link>
+              </li>
+             
+            </ul>
+          </b-collapse>
+        </li>
+
+        <li class="nav-item">
+          <span class="nav-link" v-b-toggle="'ubicacion'">
+            <span class="menu-title">Ubicación</span>
+            <i class="menu-arrow"></i>
+            <i class="mdi mdi-crosshairs-gps menu-icon"></i>
+          </span>
+          <b-collapse accordion="sidebar-accordion" id="ubicacion">
+            <ul class="nav flex-column sub-menu">
+              <li class="nav-item">
+                <router-link class="nav-link" to="/ubicacion/registrar/">Crear</router-link>
+              </li>
+              <li class="nav-item">
+                <router-link class="nav-link" to="/ubicacion/listar/">Listar</router-link>
+              </li>
+             
+            </ul>
+          </b-collapse>
+        </li>
+
         <li class="nav-item">
           <span class="nav-link" v-b-toggle="'ui-basic'">
             <span class="menu-title">Basic UI Elements</span>

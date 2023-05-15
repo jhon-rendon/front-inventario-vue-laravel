@@ -20,26 +20,29 @@
           <div class="card">
             <div class="card-body">
            
-           
-                <table class="table table-striped" v-if="marcas.data">
-                <thead>
-                        <tr>
-                        <th scope="col">#Id</th>
-                        <th scope="col">Nombre</th>
-                        <th scope="col">Descripción</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr v-for="item in marcas.data" :key="item.id">
-                            <th scope="row">{{ item.id }}</th>
-                            <td> {{  item.nombre  }}</td>
-                            <td> {{  item.descripcion  }}</td>
-                        </tr>
-                       
-                    </tbody>
-                </table>
-                <pagination :data="marcas" @pagination-change-page="getResults"></pagination>
-            
+                <template v-if="marcas.data">
+                  <table class="table table-striped" >
+                  <thead>
+                          <tr>
+                          <th scope="col">#Id</th>
+                          <th scope="col">Nombre</th>
+                          <th scope="col">Descripción</th>
+                          </tr>
+                      </thead>
+                      <tbody>
+                          <tr v-for="item in marcas.data" :key="item.id">
+                              <th scope="row">{{ item.id }}</th>
+                              <td> {{  item.nombre  }}</td>
+                              <td> {{  item.descripcion  }}</td>
+                          </tr>
+                         
+                      </tbody>
+                  </table>
+                  <pagination :data="marcas" @pagination-change-page="getResults"></pagination>
+     
+                </template>
+                <Spinner v-else />
+
             </div>
           </div>
         </div>
@@ -52,11 +55,13 @@
 <script>
 
 import ApiPublic from '@/api/ApiPublic'
+import Spinner   from '@/components/loading/Spinner.vue'
 
 export default {
 
     name: "ListarMarca",
     components: {
+      Spinner
     },
 
     data() {

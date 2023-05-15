@@ -5,6 +5,10 @@ import layout from '../layout'
 import marcasRouter from '@/modules/marcas/router'
 import categoriasRouter from '@/modules/categorias/router'
 import subCategoriasRouter from '@/modules/subcategorias/router'
+import tipoUbicacionRouter from '@/modules/tipoUbicacion/router'
+import ubicacionRouter from '@/modules/ubicacion/router'
+
+
 
 Vue.use(Router)
 
@@ -40,6 +44,16 @@ export default new Router({
       path: '/subcategorias',
       component: layout,
       ...subCategoriasRouter
+    },
+    {
+      path: '/tipo-ubicacion',
+      component: layout,
+      ...tipoUbicacionRouter
+    },
+    {
+      path: '/ubicacion',
+      component: layout,
+      ...ubicacionRouter
     },
 
     {

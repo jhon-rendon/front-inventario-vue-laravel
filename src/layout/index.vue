@@ -28,3 +28,10 @@
     }
   }
 </script>
+
+<style >
+.is-invalid{
+    color:brown
+}
+
+</style>

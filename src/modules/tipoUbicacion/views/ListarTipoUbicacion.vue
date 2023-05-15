@@ -2,15 +2,15 @@
     <section class="tables">
       <div class="page-header">
         <h3 class="page-title">
-          SUBCATEGORIAS
+          TIPO DE UBICACION
         </h3>
         <nav aria-label="breadcrumb">
           <ol class="breadcrumb">
             <li class="breadcrumb-item">
-              <a href="javascript:void(0);">SubCategorias</a>
+              <a href="javascript:void(0);">Tipo de Ubicación</a>
             </li>
             <li class="breadcrumb-item active" aria-current="page">
-              Listado de SubCategorias
+              Listado de tipos de ubicación
             </li>
           </ol>
         </nav>
@@ -20,31 +20,23 @@
           <div class="card">
             <div class="card-body">
            
-                <template v-if="subcategorias.data">
+                <template v-if="tipoUbicacion.data">
                   <table class="table table-striped">
                   <thead>
-                          <tr>
+                         <tr>
                           <th scope="col">#Id</th>
-                          <th scope="col">Nombre</th>
-                          <th scope="col">Descripción</th>
-                          <th scope="col">Tipo Cantidad</th>
-                          <th scope="col">ID Categoria</th>
-                          <th scope="col">Nombre Categoria</th>
-                          </tr>
+                          <th scope="col">Tipo</th>
+                         </tr>
                       </thead>
                       <tbody>
-                          <tr v-for="item in subcategorias.data" :key="item.id">
+                          <tr v-for="item in tipoUbicacion.data" :key="item.id">
                               <th scope="row">{{ item.id }}</th>
-                              <td> {{  item.nombre  }}</td>
-                              <td> {{  item.descripcion  }}</td>
-                              <td> {{  item.tipo_cantidad  }}</td>
-                              <td> {{  item.categoria_articulos_id  }}</td>
-                              <td> {{  item.categoria.nombre }}</td>
+                              <td> {{  item.tipo  }}</td>
                             </tr>
                         
                       </tbody>
                   </table>
-                  <pagination :data="subcategorias" @pagination-change-page="getResults"></pagination>
+                  <pagination :data="tipoUbicacion" @pagination-change-page="getResults"></pagination>
                 </template>
 
                 <Spinner v-else/>
@@ -66,16 +58,16 @@ import Spinner   from '@/components/loading/Spinner.vue'
 
 export default {
 
-    name: "ListarSubcategoria",
+    name: "ListarTipoUbicacion",
     components: {
       Spinner
     },
 
     data() {
         return {
-            subcategorias : {},
-            message    : null,
-            errors     : {}
+            tipoUbicacion : {},
+            message       : null,
+            errors        : {}
         }
     },
 
@@ -86,8 +78,8 @@ export default {
     methods: {
         async getResults(page = 1) {
             try {
-                const { data: resp }  = await ApiPublic.get('/subcategoria-articulos?page='+page);
-                this.subcategorias = resp
+                const { data: resp }  = await ApiPublic.get('/tipo-ubicacion?page='+page);
+                this.tipoUbicacion = resp
             }
             catch( error ){
                 this.message = error.response.data.message
