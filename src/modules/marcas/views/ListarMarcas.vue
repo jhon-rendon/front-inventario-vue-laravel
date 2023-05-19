@@ -83,7 +83,7 @@ export default {
 			
             try {
                 const { data: resp }  = await ApiPublic.get('/marcas?page='+page);
-                this.marcas = resp.data
+                this.marcas = resp;
             }
             catch( error ){
                 this.message = error.response.data.message

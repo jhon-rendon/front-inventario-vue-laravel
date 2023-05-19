@@ -40,6 +40,7 @@
                   type="text"
                   class="form-control"
                   placeholder="Ingrese el Nombre"
+                  v-model="ubicacion.nombre"
                 />
                 <div class="is-invalid" v-if="errors.nombre">{{ errors.nombre[0] }}</div>
               </div>
@@ -110,17 +111,17 @@ export default {
 
         async registrar () {
 
-            let nombre        = this.ubicacion.nombre;
-            let codigo        = this.ubicacion.codigo;
-            let direccion     = this.ubicacion.direccion;
-            let tipoUbicacion = this.ubicacion.tipoUbicacion;
+            let nombre            = this.ubicacion.nombre;
+            let codigo            = this.ubicacion.codigo;
+            let direccion         = this.ubicacion.direccion;
+            let tipo_ubicacion_id = this.ubicacion.tipoUbicacion;
 
             this.message = ''
             this.error   = {}
             
             try {
                 
-                const { data: resp }  = await ApiPublic.post('/ubicacion',{ nombre, codigo, direccion, tipoUbicacion  });
+                const { data: resp }  = await ApiPublic.post('/ubicacion',{ nombre, codigo, direccion, tipo_ubicacion_id  });
                 const { message }     = resp;
                 this.message  = message;
 

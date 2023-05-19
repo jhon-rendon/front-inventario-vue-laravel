@@ -120,6 +120,29 @@
           </b-collapse>
         </li>
 
+
+        <li class="nav-item">
+          <span class="nav-link" v-b-toggle="'articulos'">
+            <span class="menu-title">Articulos</span>
+            <i class="menu-arrow"></i>
+            <i class="mdi mdi-crosshairs-gps menu-icon"></i>
+          </span>
+          <b-collapse accordion="sidebar-accordion" id="articulos">
+            <ul class="nav flex-column sub-menu">
+              <li class="nav-item">
+                <router-link class="nav-link" to="/articulos/registrar/">Crear</router-link>
+              </li>
+              <li class="nav-item">
+                <router-link class="nav-link" to="/articulos/listar/">Listar</router-link>
+              </li>
+              <li class="nav-item">
+                <router-link class="nav-link" to="/articulos/traslados/">Traslados</router-link>
+              </li>
+             
+            </ul>
+          </b-collapse>
+        </li>
+
         <li class="nav-item">
           <span class="nav-link" v-b-toggle="'ui-basic'">
             <span class="menu-title">Basic UI Elements</span>

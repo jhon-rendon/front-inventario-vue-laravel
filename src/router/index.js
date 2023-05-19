@@ -7,7 +7,7 @@ import categoriasRouter from '@/modules/categorias/router'
 import subCategoriasRouter from '@/modules/subcategorias/router'
 import tipoUbicacionRouter from '@/modules/tipoUbicacion/router'
 import ubicacionRouter from '@/modules/ubicacion/router'
-
+import articulosRouter from '@/modules/articulos/router'
 
 
 Vue.use(Router)
@@ -54,6 +54,11 @@ export default new Router({
       path: '/ubicacion',
       component: layout,
       ...ubicacionRouter
+    },
+    {
+      path: '/articulos',
+      component: layout,
+      ...articulosRouter
     },
 
     {
