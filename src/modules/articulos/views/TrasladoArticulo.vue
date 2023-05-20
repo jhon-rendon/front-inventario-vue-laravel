@@ -52,8 +52,14 @@
                       class="form-control"
                       placeholder="Ingrese el Ticket"
                       v-model="articulo.ticket"
+                      :disabled="sucessForm"
                     />
                     <div class="is-invalid" v-if="errors.ticket">{{ errors.ticket[0] }}</div>
+
+                    <template v-if="$v.articulo.ticket.$error && $v.articulo.ticket.$dirty">
+                      <div class="is-invalid" v-if="!$v.articulo.ticket.required"> El ticket es Requerido.</div>       
+                      <div class="is-invalid" v-if="!$v.articulo.ticket.numeric"> El ticket debe ser Numérico</div>    
+                    </template>
                 </div>
                 </td>
                </tr>
@@ -68,6 +74,7 @@
                       class="form-control"
                       placeholder="Ingrese la descripcion"
                       v-model="articulo.descripcion"
+                      :disabled="sucessForm"
                     />
                     <div class="is-invalid" v-if="errors.ticket">{{ errors.ticket[0] }}</div>
                 </div>
@@ -84,14 +91,23 @@
                 <th> Cantidad a Trasladar</th>
                 <td>  
                   <span v-if="kardeUbicacionById.data.cantidad > 0 && kardeUbicacionById.data.cantidad == 1"> 1 </span>
-                  <div v-else class="form-group">
+              
+                  <div v-else class="form-group" :class="{ 'form-group--error': $v.articulo.cantidad.$error }"> 
                     <input
-                      type="text"
+                      type="number"
                       class="form-control"
                       placeholder="Ingrese la Cantidad"
-                      v-model="articulo.cantidad"
+                      v-model.trim="$v.articulo.cantidad.$model"
+                      :disabled="sucessForm"
                     />
-                    <div class="is-invalid" v-if="errors.cantidad">{{ errors.cantidad[0] }}</div>
+                    
+                    <div class="is-invalid" v-if="errors.cantidad "> {{ errors.cantidad[0] }} </div>
+                    
+                    <template v-if="$v.articulo.cantidad.$error && $v.articulo.cantidad.$dirty">
+                      <div class="is-invalid" v-if="!$v.articulo.cantidad.required"> La cantidad es Requerida.</div>
+                      <div class="is-invalid" v-if="!$v.articulo.cantidad.between">  La cantidad debe ser mayor que 0 y menor o igual al disponible</div>
+                      
+                    </template>
                   </div>
                 </td>
                </tr>
@@ -115,6 +131,7 @@
                     <div class="form-group">
                       <select  class="form-control" 
                               v-model="articulo.estado" 
+                              :disabled="sucessForm"
                               >
                           <option 
                           v-for="item in estados" :key="item.nombre"
@@ -123,6 +140,10 @@
                           </option>
                       </select>
                       <div class="is-invalid" v-if="errors.estado">{{ errors.estado[0] }}</div>
+
+                      <template v-if="$v.articulo.estado.$error && $v.articulo.estado.$dirty">
+                        <div class="is-invalid" v-if="!$v.articulo.estado.required"> El estado es Requerido</div>   
+                    </template>
                   </div>
                 </td>
                </tr>
@@ -138,6 +159,7 @@
                 <td>  
                   <select  class="form-control" 
                          v-model="articulo.ubicacion_destino" 
+                         :disabled="sucessForm"
                          >
                     <option 
                      v-for="item in ubicaciones" :key="item.id"
@@ -148,11 +170,18 @@
                     </option>
                 </select>
                 <div class="is-invalid" v-if="errors.ubicacion_destino">{{ errors.ubicacion_destino[0] }}</div>
+
+                  <template v-if="$v.articulo.ubicacion_destino.$error && $v.articulo.ubicacion_destino.$dirty">
+                        <div class="is-invalid" v-if="!$v.articulo.ubicacion_destino.required"> La ubicacion Destino es Requerida</div>
+                       <div class="is-invalid" v-if="!$v.articulo.ubicacion_destino.validateDistinct"> La ubicacion Destino Debe ser diferente a la actual</div>
+                           
+                   </template>
+
                 </td>
                </tr>
                <tr>
                 <td colspan="2" style="text-align: center;"> 
-                  <button type="submit" class="btn btn-primary">Trasladar</button> 
+                  <button type="submit" class="btn btn-primary" v-if="!sucessForm">Trasladar</button> 
                 </td>
                </tr>
              </table>
@@ -182,9 +211,12 @@
 //import ApiPrivate from '@/api/ApiPrivate'
 import ApiPublic from '@/api/ApiPublic'
 import Spinner   from '@/components/loading/Spinner.vue'
+import { required,numeric,minValue,between,requiredIf } from 'vuelidate/lib/validators'
+
+
 
 export default {
-  name: "CrearArticulo",
+  name: "TrasladoArticulo",
   components: {
       Spinner
     },
@@ -200,7 +232,6 @@ export default {
     },
     
   },
-
   data() {
         return {
            articulo :{
@@ -228,19 +259,58 @@ export default {
             loading       : true,
         }
     },
+
+    validations() {
+      return {
+      articulo: {
+        cantidad:{
+           required: requiredIf(function ( value ) {
+            return ( this.kardeUbicacionById.data.cantidad > 1 )
+           }),
+           numeric,
+           minValue: minValue(1),
+           between (value) {
+            return between(1, this.kardeUbicacionById.data.cantidad)(value)
+            }
+        },
+        ticket:{
+          required,
+          numeric,
+        },
+        ubicacion_destino:{
+          required,
+          validateDistinct : () => ( this.kardeUbicacionById.data.ubicacion.id !== this.articulo.ubicacion_destino )
+        },
+        estado:{
+          required,
+        }
+      },
+      }
+    }, 
      mounted(){
       
       if( isNaN( Number( this.id ) ) || isNaN( Number( this.idUbicacion ) ) ){
         this.redirectArticulo();
       }
-
-      //this.listarUbicaciones();
-      //this.getArticuloById();
       this.getValidUbicacionArticulo();
+ 
     },
 
     methods: {
-
+      showAlert() {
+        this.$swal.fire(
+          'Success!',
+          'Your file has been Success.',
+          'success'
+        )
+      },
+      showErrorAlert( error = ''){
+        this.$swal.fire({
+          icon: 'error',
+          title: 'Oops...',
+          text: (error)? error : 'Se presenta error al realizar el traslado'
+        })
+      },
       redirectArticulo(){
         this.$router.push({ name: 'listar-articulo' })
       },
@@ -252,38 +322,60 @@ export default {
 
             this.message = ''
             this.error   = {}
-            
-            try {
-                  const { data: resp }  = await ApiPublic.post('/traslado-articulos',
-                  { 
-                    //marca              : this.articulos.marca,
-                    //subcategoria       : this.articulos.subcategoria,
-                    descripcion        : this.articulo.descripcion,
-                    ubicacion_destino  : this.articulo.ubicacion_destino,
-                    //modelo             : this.articulos.modelo,
-                    //serial             : this.articulos.serial,
-                    //activo             : this.articulos.activo,
-                    estado             : this.articulo.estado,
-                    articulo_id        : this.id,
-                    ubicacion_origen   : this.kardeUbicacionById.data.ubicacion.id,
-                    usuario_id         : 1,
-                    cantidad           : ( this.kardeUbicacionById.data.cantidad > 1 )? this.articulo.cantidad : 1,
-                    ticket             : this.articulo.ticket,
-                    //tipo_cantidad      : this.tipoCantidad
-                  });
-                
-                const { message }     = resp;
-                this.message  = message;
 
-                this.limpiarCampos()
-                this.sucessForm = true
-               
-            } catch ( error ){
-
-               this.message = error.response.data.message
-               this.errors  = error.response.data.errors
-              
+            this.$v.$touch();
+            if (this.$v.$invalid) {
+                 return;
             }
+
+            this.$swal.fire({
+              title: 'Realmente desea realizar el traslado?',
+              text: "",
+              icon: 'warning',
+              showCancelButton: true,
+              confirmButtonColor: '#3085d6',
+              cancelButtonColor: '#d33',
+              confirmButtonText: 'Confirmar',
+              cancelButtonText:  'Cancelar'
+            }).then(async (result) => {
+              
+      
+              if ( result.value ) {
+
+                    try {
+                      const { data: resp }  = await ApiPublic.post('/traslado-articulos',
+                      { 
+               
+                        descripcion        : this.articulo.descripcion,
+                        ubicacion_destino  : this.articulo.ubicacion_destino,
+                        estado             : this.articulo.estado,
+                        articulo_id        : this.id,
+                        ubicacion_origen   : this.kardeUbicacionById.data.ubicacion.id,
+                        usuario_id         : 1,
+                        cantidad           : ( this.kardeUbicacionById.data.cantidad > 1 )? this.articulo.cantidad : 1,
+                        ticket             : this.articulo.ticket,
+                      });
+                    
+                    const { message }     = resp;
+                    this.message  = message;
+
+                    this.kardeUbicacionById.data.cantidad -= this.articulo.cantidad
+                    this.limpiarCampos()
+                    this.sucessForm = true
+                    this.showAlert() 
+                  
+                } catch ( error ){
+
+                  this.message = error.response.data.message
+                  this.errors  = error.response.data.errors
+                  showErrorAlert( this.errors );
+                  
+                }
+              
+              }
+            });
+            
+           
         },
         limpiarCampos(){
             /*this.articulo = {
