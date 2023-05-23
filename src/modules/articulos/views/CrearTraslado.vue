@@ -2,7 +2,7 @@
   <section class="tables">
     <div class="page-header">
       <h3 class="page-title">
-        TRASLADO ARTICULO
+        CREAR TRASLADO ARTICULO
       </h3>
       <nav aria-label="breadcrumb">
         <ol class="breadcrumb">
@@ -24,7 +24,7 @@
             <form @submit.prevent="registrar">
              
            
-             <table class="table table-bordered" style="width:80%;margin:0 auto;" v-if=" articuloById && kardeUbicacionById.data.cantidad > 0 ">
+             <table class="table table-bordered" v-if=" articuloById && kardeUbicacionById.data.cantidad > 0 ">
                <tr>
                 <th> Marca </th>
                 <td> <span v-if="articuloById.marcas">{{  articuloById.marcas.nombre }}</span> </td>
@@ -157,22 +157,19 @@
                <tr>
                 <th> Ubicación Destino  </th>
                 <td>  
-
-                  <v-select
-                    v-if="ubicaciones"
-                    v-model.trim="articulo.ubicacion_destino"
-                    :options="ubicaciones"
-                    class="select"
-                    :disabled="sucessForm"
-                    :getOptionLabel="item => ( item.codigo )? 'Codigo: '+item.codigo+' | ' : ''    
-                                        + 'Tipo: '+item.tipo_ubicacion.tipo  
-                                        + '| Ubicación: '+item.nombre "
-                  />
-                  <template v-else>
-                    <b-spinner variant="primary" label="Spinning"></b-spinner>
-                  </template>
-  
-                  <div class="is-invalid" v-if="errors.ubicacion_destino">{{ errors.ubicacion_destino[0] }}</div>
+                  <select  class="form-control" 
+                         v-model="articulo.ubicacion_destino" 
+                         :disabled="sucessForm"
+                         >
+                    <option 
+                     v-for="item in ubicaciones" :key="item.id"
+                    :value="item.id">
+                       {{  ( item.codigo )? 'Codigo: '+item.codigo+' | ' : '' }}   
+                       {{ 'Tipo: '+item.tipo_ubicacion.tipo }} 
+                       {{ '| Ubicación: '+item.nombre }}
+                    </option>
+                </select>
+                <div class="is-invalid" v-if="errors.ubicacion_destino">{{ errors.ubicacion_destino[0] }}</div>
 
                   <template v-if="$v.articulo.ubicacion_destino.$error && $v.articulo.ubicacion_destino.$dirty">
                         <div class="is-invalid" v-if="!$v.articulo.ubicacion_destino.required"> La ubicacion Destino es Requerida</div>
@@ -190,7 +187,7 @@
              </table>
 
              <div v-else-if="!loading">
-                <template v-if="kardeUbicacionById.data.cantidad == 0 && !sucessForm">
+                <template v-if="kardeUbicacionById.data.cantidad == 0">
                   No Hay Cantidad Disponible
                 </template>
              </div>
@@ -224,17 +221,6 @@ export default {
       Spinner
     },
 
-  props:{
-    id: {
-      type: Number,
-      required: true
-    },
-    idUbicacion: {
-      type: Number,
-      required: true
-    },
-    
-  },
   data() {
         return {
            articulo :{
@@ -282,13 +268,7 @@ export default {
         },
         ubicacion_destino:{
           required,
-          validateDistinct : () => {
-            if( this.articulo.ubicacion_destino ){
-              return ( this.kardeUbicacionById.data.ubicacion.id !==  this.articulo.ubicacion_destino.id )
-            }else{
-              return true;
-            }
-          }
+          validateDistinct : () => ( this.kardeUbicacionById.data.ubicacion.id !== this.articulo.ubicacion_destino )
         },
         estado:{
           required,
@@ -297,18 +277,14 @@ export default {
       }
     }, 
      mounted(){
-      
-      if( isNaN( Number( this.id ) ) || isNaN( Number( this.idUbicacion ) ) ){
-        this.redirectArticulo();
-      }
-      this.getValidUbicacionArticulo();
- 
+       
     },
-    computed:{
+
+    methods: {
       showAlert() {
         this.$swal.fire(
           'Success!',
-          'El traslado se realizo satisfactoriamente',
+          'Your file has been Success.',
           'success'
         )
       },
@@ -319,11 +295,11 @@ export default {
           text: (error)? error : 'Se presenta error al realizar el traslado'
         })
       },
-    },
-    methods: {
-      
       redirectArticulo(){
         this.$router.push({ name: 'listar-articulo' })
+      },
+      selectedCategoria( e ){
+        this.tipoCantidad = e.target.selectedOptions[0].dataset.tipocantidad ;
       },
       
       async registrar () {
@@ -355,7 +331,7 @@ export default {
                       { 
                
                         descripcion        : this.articulo.descripcion,
-                        ubicacion_destino  : ( this.articulo.ubicacion_destino ) ? this.articulo.ubicacion_destino.id : null,
+                        ubicacion_destino  : this.articulo.ubicacion_destino,
                         estado             : this.articulo.estado,
                         articulo_id        : this.id,
                         ubicacion_origen   : this.kardeUbicacionById.data.ubicacion.id,

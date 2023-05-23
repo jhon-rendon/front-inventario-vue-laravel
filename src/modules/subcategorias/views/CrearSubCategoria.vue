@@ -21,16 +21,24 @@
           <div class="card-body">
             <!---<h4 class="card-title">Registro de Marca</h4>-->
             <form @submit.prevent="registrar">
-             
+            
               <div class="form-group">
                 <label>Categoria</label>
-                <select  class="form-control" v-model="subcategoria.categorias">
+                
+                <v-select
+                v-if="categorias"
+                label="nombre"
+                v-model="subcategoria.categorias"
+                :options="categorias"
+              />
+                <!--<select  class="form-control" v-model="subcategoria.categorias">
                     <option 
                      v-for="item in categorias" :key="item.id"
                     :value="item.id">
                       {{ item.nombre }}
                     </option>
                 </select>
+                -->
                 <div class="is-invalid" v-if="errors.categoria">{{ errors.categoria[0] }}</div>
               </div>
               
@@ -105,13 +113,19 @@ export default {
     },
 
     methods: {
-
-        async registrar () {
+      showAlert() {
+        this.$swal.fire(
+          'Éxito',
+          'Registro Satisfactorio',
+          'success'
+        )
+      },
+      async registrar () {
 
             let nombre        = this.subcategoria.nombre;
             let descripcion   = this.subcategoria.descripcion;
             let tipo_cantidad = this.subcategoria.tipo_cantidad;
-            let categoria     = this.subcategoria.categorias;
+            let categoria     = this.subcategoria.categorias.id;
 
             this.message = ''
             this.error   = {}
@@ -123,12 +137,13 @@ export default {
                 this.message  = message;
 
                 this.limpiarCampos()
+                this.showAlert()
                
             } catch ( error ){
 
                this.message = error.response.data.message
                this.errors  = error.response.data.errors
-              console.log( this.errors.nombre[0]);
+              // console.log( this.errors.nombre[0]);
             }
         },
         limpiarCampos(){

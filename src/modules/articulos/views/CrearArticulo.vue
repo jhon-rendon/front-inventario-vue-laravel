@@ -23,31 +23,44 @@
             <form @submit.prevent="registrar">
              
               <div class="form-group">
-                <label>Marcas</label>
-                <select  class="form-control" v-model="articulos.marca">
-                    <option 
-                     v-for="item in marcas" :key="item.id"
-                    :value="item.id">
-                      {{ item.nombre }}
-                    </option>
-                </select>
+                  <label>Marcas</label>
+                  
+                  <v-select
+                  v-if="marcas"
+                  label="nombre"
+                  v-model.trim="articulos.marca"
+                  :options="marcas"
+                  class="select"
+                />
+                <template v-else>
+                  <b-spinner variant="primary" label="Spinning"></b-spinner>
+                </template>
+                
                 <div class="is-invalid" v-if="errors.marca">{{ errors.marca[0] }}</div>
+                <template v-if="!isFormSubmitted && $v.articulos.marca.$error && $v.articulos.marca.$dirty">
+                        <div class="is-invalid" v-if="!$v.articulos.marca.required"> La Marca  es Requerida</div>        
+                </template>
               </div>
 
               <div class="form-group">
                 <label>Categoria - Subcategoria</label>
-                <select  class="form-control" 
-                         v-model="articulos.subcategoria" 
-                         @change="selectedCategoria( $event )"
-                         >
-                    <option 
-                     v-for="item in subcategoria" :key="item.id"
-                     :data-tipocantidad=" item.tipo_cantidad"
-                    :value="item.id">
-                       {{  item.categoria.nombre }} - {{ item.nombre }} 
-                    </option>
-                </select>
+
+                <v-select
+                v-if="subcategoria"
+                v-model.trim="articulos.subcategoria"
+                :options="subcategoria"
+                class="select"
+                :getOptionLabel="item => item.categoria.nombre + ' '+ item.nombre "
+                />
+                <template v-else>
+                  <b-spinner variant="primary" label="Spinning"></b-spinner>
+                </template>
+
                 <div class="is-invalid" v-if="errors.subcategoria">{{ errors.subcategoria[0] }}</div>
+
+                <template v-if="!isFormSubmitted && $v.articulos.subcategoria.$error && $v.articulos.subcategoria.$dirty">
+                        <div class="is-invalid" v-if="!$v.articulos.subcategoria.required"> La Categoria es Requerida</div>        
+                </template>
               </div>
 
               <div class="form-group" v-if="tipoCantidad">
@@ -62,7 +75,7 @@
                   type="text"
                   class="form-control"
                   placeholder="Ingrese el Modelo"
-                  v-model="articulos.modelo"
+                  v-model.trim="articulos.modelo"
                 />
                 <div class="is-invalid" v-if="errors.modelo">{{ errors.modelo[0] }}</div>
               </div>
@@ -84,7 +97,7 @@
                   type="text"
                   class="form-control"
                   placeholder="Ingrese el Codigo del Activo"
-                  v-model="articulos.activo"
+                  v-model.trim="articulos.activo"
                 />
                 <div class="is-invalid" v-if="errors.activo">{{ errors.activo[0] }}</div>
               </div>
@@ -99,34 +112,44 @@
                   type="number"
                   class="form-control"
                   placeholder="Ingrese La cantidad"
-                  v-model="articulos.cantidad"
+                  v-model.trim="articulos.cantidad"
                 />
                 <div class="is-invalid" v-if="errors.cantidad">{{ errors.cantidad[0] }}</div>
+
+                <template v-if="!isFormSubmitted && $v.articulos.cantidad.$error && $v.articulos.cantidad.$dirty">
+                      <div class="is-invalid" v-if="!$v.articulos.cantidad.required"> La cantidad es Requerida.</div>
+                      <div class="is-invalid" v-if="!$v.articulos.cantidad.minValue"> La cantidad Debe ser Mayor a 0.</div>
+                      
+                </template>
               </div>
 
             </template>
              
             <div class="form-group">
                 <label>Ubicación Destino </label>
-                <select  class="form-control" 
-                         v-model="articulos.ubicacion_destino" 
-                         >
-                    <option 
-                     v-for="item in ubicaciones" :key="item.id"
-                    :value="item.id">
-                       {{  ( item.codigo )? 'Codigo: '+item.codigo+' | ' : '' }}   
-                       {{ 'Tipo: '+item.tipo_ubicacion.tipo }} 
-                       {{ '| Ubicación: '+item.nombre }}
-                    </option>
-                </select>
+                <v-select
+                v-if="ubicaciones"
+                v-model.trim="articulos.ubicacion_destino"
+                :options="ubicaciones"
+                class="select"
+                :getOptionLabel="item => viewUbicacion(item) "
+              />
+              <template v-else>
+                <b-spinner variant="primary" label="Spinning"></b-spinner>
+              </template>
+  
                 <div class="is-invalid" v-if="errors.ubicacion_destino">{{ errors.ubicacion_destino[0] }}</div>
+
+                <template v-if="!isFormSubmitted && $v.articulos.ubicacion_destino.$error && $v.articulos.ubicacion_destino.$dirty">
+                        <div class="is-invalid" v-if="!$v.articulos.ubicacion_destino.required"> La ubicacion Destino es Requerida</div>        
+                </template>
             </div>
 
             
             <div class="form-group">
                 <label>Estado Articulo </label>
                 <select  class="form-control" 
-                         v-model="articulos.estado" 
+                         v-model.trim="articulos.estado" 
                          >
                     <option 
                      v-for="item in estados" :key="item.nombre"
@@ -135,6 +158,9 @@
                     </option>
                 </select>
                 <div class="is-invalid" v-if="errors.estado">{{ errors.estado[0] }}</div>
+                <template v-if="!isFormSubmitted && $v.articulos.estado.$error && $v.articulos.estado.$dirty">
+                    <div class="is-invalid" v-if="!$v.articulos.estado.required"> El estado es Requerido</div>   
+                </template>
             </div>
 
             
@@ -144,9 +170,13 @@
                   type="text"
                   class="form-control"
                   placeholder="Ingrese el Ticket"
-                  v-model="articulos.ticket"
+                  v-model.trim="articulos.ticket"
                 />
                 <div class="is-invalid" v-if="errors.ticket">{{ errors.ticket[0] }}</div>
+                <template v-if="!isFormSubmitted && $v.articulos.ticket.$error && $v.articulos.ticket.$dirty">
+                     <!-- <div class="is-invalid" v-if="!$v.articulo.ticket.required"> El ticket es Requerido.</div>-->       
+                      <div class="is-invalid" v-if="!$v.articulos.ticket.numeric"> El ticket debe ser Numérico</div>    
+                 </template>
             </div>
 
             <button type="submit" class="btn btn-primary">Crear</button>
@@ -168,6 +198,8 @@
  
 //import ApiPrivate from '@/api/ApiPrivate'
 import ApiPublic from '@/api/ApiPublic'
+import { required,numeric,minValue,between,requiredIf } from 'vuelidate/lib/validators'
+
 
 export default {
   name: "CrearArticulo",
@@ -198,6 +230,7 @@ export default {
                              { id: 3,  nombre:'Reparado'},
                              { id: 1,  nombre:'Baja' },
                             ],
+           isFormSubmitted: false
         }
     },
      mounted(){
@@ -206,24 +239,83 @@ export default {
       this.listarUbicaciones();
     },
 
+    validations() {
+      return {
+      articulos: {
+        cantidad:{
+           required: requiredIf(function ( value ) {
+            return ( this.tipoCantidad === 'lote' )
+           }),
+           numeric,
+           minValue: minValue(1)
+        },
+        marca:{
+          required,
+          //numeric,
+        },
+        subcategoria:{
+          required,
+          //numeric,
+        },
+        ticket:{
+          //required,
+          //numeric,
+        },
+        ubicacion_destino:{
+          required,
+        },
+        estado:{
+          required,
+        }
+      },
+      }
+    },
+
+    computed:{
+      showAlert() {
+        this.$swal.fire(
+          'Éxito',
+          'Registro Satisfactorio',
+          'success'
+        )
+      },
+    },
+    watch:{
+      'articulos.subcategoria'( subcategoria ){
+        this.tipoCantidad = subcategoria.tipo_cantidad
+      }
+           
+    },
+
     methods: {
 
-      selectedCategoria( e ){
-        this.tipoCantidad = e.target.selectedOptions[0].dataset.tipocantidad ;
+      viewUbicacion( item ){
+         let ubicacion = "";
+        if ( item.codigo ){
+          ubicacion+="Codigo: "+item.codigo +" | ";
+        }  
+        ubicacion+='Tipo: '+item.tipo_ubicacion.tipo  + '| Ubicación: '+item.nombre;
+        
+        return ubicacion;
       },
-      
       async registrar () {
 
             this.message = ''
             this.error   = {}
+            this.isFormSubmitted = false
             
+            this.$v.$touch();
+            if (this.$v.$invalid) {
+                 return;
+            }
+
             try {
                   const { data: resp }  = await ApiPublic.post('/kardex-articulos',
                   { 
-                    marca              : this.articulos.marca,
-                    subcategoria       : this.articulos.subcategoria,
+                    marca              : ( this.articulos.marca )             ? this.articulos.marca.id             : null,
+                    subcategoria       : ( this.articulos.subcategoria )      ? this.articulos.subcategoria.id      : null,
+                    ubicacion_destino  : ( this.articulos.ubicacion_destino ) ? this.articulos.ubicacion_destino.id : null,
                     descripcion        : this.articulos.descripcion,
-                    ubicacion_destino  : this.articulos.ubicacion_destino,
                     modelo             : this.articulos.modelo,
                     serial             : this.articulos.serial,
                     activo             : this.articulos.activo,
@@ -238,8 +330,10 @@ export default {
                 const { message }     = resp;
                 this.message  = message;
 
+                this.isFormSubmitted = true
                 this.limpiarCampos()
-               
+                this.showAlert()
+            
             } catch ( error ){
 
                this.message = error.response.data.message
@@ -305,8 +399,8 @@ export default {
 </script>
 
 <style setup>
-select{
-  width: 300px !important;
+select,.select{
+  width: 500px !important;
 }
 
 </style>

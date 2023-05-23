@@ -34,9 +34,15 @@ export default {
         },
 
         {
-          path: 'listar-traslados',
+          path: 'traslados/listar',
           name: 'listar-traslados',
           component: () => import(/* webpackChunkName: listar-articulo */ '@/modules/articulos/views/ListarTraslados.vue')
+        },
+
+        {
+          path: 'traslados/crear',
+          name: 'crear-traslado',
+          component: () => import(/* webpackChunkName: listar-articulo */ '@/modules/articulos/views/CrearTraslado.vue')
         },
         
       ]

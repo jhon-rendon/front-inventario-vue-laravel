@@ -19,7 +19,40 @@
       <div class="col-lg-12 grid-margin stretch-card">
         <div class="card">
           <div class="card-body">
+
             <template v-if="articulos.data">
+
+               
+       
+              <div class="row">
+      <div class="mb-3 col-md-3">
+                  Cantidad por pagina:
+                  <select v-model="pageSize" @change="handlePageSizeChange($event)">
+                    <option v-for="size in pageSizes" :key="size" :value="size">
+                      {{ size }}
+                    </option>
+                  </select>
+               </div>
+      <div class="col-md-3"></div>
+      <div class="input-group mb-3 col-md-4" >
+        <input
+          type="text"
+          class="form-control"
+          placeholder="Busqueda"
+          v-model="search"
+        />
+        <div class="input-group-append">
+          <button
+            class="btn btn-outline-secondary"
+            type="button"
+            @click="page = 1; retrieveTutorials();"
+          >
+            Buscar
+          </button>
+        </div>
+      </div>
+    
+  </div>
               <table class="table table-striped table-responsive">
                 <thead>
                   <tr>
@@ -54,13 +87,15 @@
                     <td v-if="item2.cantidad > 0">
 
                       <router-link :to="{ name: 'traslado-articulo',params: {id : item.id, idUbicacion: item2.id },props: true}"
-                          title="trasladar"
-                          type="button"
-                          class="btn"
-                          v-if="item2.cantidad > 0 "
-                      >
+                          title="Trasladar" type="button">
                       <i class="mdi mdi-ribbon"></i>
                       </router-link>
+
+                      <button title="ver Detalle Traslados"
+                              @click="verDetalleTraslados( item, item2.cantidad, item2.ubicacion.nombre )">
+                        <i class="mdi mdi-border-all"></i>
+                      </button>
+                      
                       <!---<button
                        title="trasladar"
                         type="button"
@@ -74,10 +109,21 @@
                   </tr>
                 </tbody>
               </table>
-              <pagination
+              <!--<pagination
                 :data="articulos"
                 @pagination-change-page="getResults"
-              ></pagination>
+              ></pagination>-->
+              
+
+            <b-pagination
+              v-model="page"
+              :total-rows="count"
+              :per-page="pageSize"
+              prev-text="Anterior"
+              next-text="Siguiente"
+              @change="handlePageChange"
+            ></b-pagination>
+             
             </template>
 
             <Spinner v-else />
@@ -90,68 +136,73 @@
       <b-modal
         id="modal"
         ref="modal"
-        title="Editar Ubicación"
-        ok-title="Actualizar"
-        cancel-title="Cancelar"
-        @ok="handleOk"
-        @show="resetModal"
+        title="Detalle de Traslados"
+        hide-footer
+        size="xl"
         @hidden="resetModal"
-      >
-        <form ref="form" @submit.stop.prevent="handleSubmit">
-         
-          <b-form-group
-            label="Tipo de Ubicación"
-            label-for="tipoUbicacion"
-            invalid-feedback="El Tipo de Ubicación es requerido"
-          >
-          <select class="form-control" v-model="tipoUbicacionById" required>
-            <option 
-                v-for="item in tipoUbicacion" :key="item.id"
-                :value="item.id" 
-                >
-                {{ item.tipo }}
-            </option>
-          </select>
-          <!--<div class="is-invalid" v-if="errorsById.tipo_ubicacion_id">{{ errorsById.tipo_ubicacion_id[0] }}</div>-->
-         </b-form-group>
+        >
+       <h3>Articulo</h3>
+       <b-table-simple  responsive striped v-if="articulo">
+             <b-thead  head-variant="dark">
+                <b-tr>
+                  <b-th>ID</b-th>
+                  <b-th>Cantidad</b-th>
+                  <b-th>Ubicación</b-th>
+                  <b-th>Modelo</b-th>
+                  <b-th>Marca</b-th>
+                  <b-th>Serial</b-th>
+                  <b-th>Activo</b-th>
+                  <b-th>Categoria</b-th> 
+              </b-tr>
+             </b-thead>
+              <b-tbody>
+                  <b-tr>   
+                    <b-th scope="row">{{ articulo.id }}</b-th>
+                    <b-td> {{ articulo.cantidad }}</b-td>
+                    <b-td> {{ articulo.ubicacion }} </b-td>
+                    <b-td >{{ articulo.modelo }}</b-td>
+                    <b-td >{{ articulo.marcas.nombre }}</b-td>
+                    <b-td >{{ articulo.serial }}</b-td>
+                    <b-td >{{ articulo.activo }}</b-td>
+                    <b-td >{{ articulo.subcategoria.categoria.nombre }} {{ articulo.subcategoria.nombre }}</b-td>
+                  </b-tr>
+             </b-tbody>
+       </b-table-simple>
           
-          <b-form-group
-            label="Nombre"
-            label-for="nombre"
-          >
-            <b-form-input
-              id="nombre"
-              v-model="ubicacionById.nombre"
-            ></b-form-input>
-          <div class="is-invalid" v-if="errorsById && errorsById.nombre">{{ errorsById.nombre[0] }}</div>
-          </b-form-group>
-          <b-form-group
-            label="Codigo"
-            label-for="codigo"
-          >
-            <b-form-input
-              id="codigo"
-              v-model="ubicacionById.codigo"
-            ></b-form-input>
-          </b-form-group> 
+      <h3>Traslados</h3>
 
-          
-          <b-form-group
-            label="Dirección"
-            label-for="direccion"
-          >
-            <b-form-input
-              id="direccion"
-              v-model="ubicacionById.direccion"
-            ></b-form-input>
-            
-          </b-form-group>
-        </form>
-        <template v-if="messageById">
-          <div v-if="messageById.success" class="alert alert-success" role="alert">{{ this.messageById.message }}</div>
-          <div v-else class="alert alert-danger" role="alert">{{ this.messageById.message }}</div>
-        </template> 
+      <b-table-simple  responsive borderless striped v-if="detalleTraslado">
+            <b-thead  head-variant="dark">
+              <b-tr>
+                <b-th>ID</b-th>
+                <b-th>Fecha</b-th>
+                <b-th>Hora</b-th>
+                <b-th>Ticket</b-th>
+                <b-th>Descripción</b-th>
+                <b-th>Cantidad</b-th>
+                <b-th>Ubicación Origen</b-th>
+                <b-th>Ubicación Destino</b-th>
+                <b-th>Estado Articulo</b-th>
+              </b-tr>
+             </b-thead>
+              <tbody >
+                <b-tr v-for="item in detalleTraslado.data" :key="item.id">
+                  <b-td> {{ item.id }}</b-td>
+                  <b-td> {{ formatoFecha( item.fecha) }}</b-td>
+                  <b-td> {{ item.hora }}</b-td>
+                  <b-td> {{ item.ticket }}</b-td>
+                  <b-td> {{ item.descripcion }}</b-td>
+                  <b-td> {{ item.cantidad }}</b-td>
+                  <b-td> <span v-if="item.ubicacion_origen > 0"> {{ item.ubicacion_origen_nombre }} </span></b-td>
+                  <b-td> {{ item.ubicacion_destino_nombre }}</b-td>
+                  <b-td> {{ item.estado_articulo.estado }}</b-td>
+              </b-tr>
+             </tbody>    
+        </b-table-simple >
+           
+        
       </b-modal>
+
     </div>
   </section>
 </template>
@@ -172,15 +223,21 @@ export default {
     data() {
         return {
             articulos         : {},
+            articulo          : null,
+            detalleTraslado   : null,
             message           : null,
             errors            : {},
-            ubicacionById     : {},
-            tipoUbicacion     : {},
-            tipoUbicacionById : null,
             messageById       : null,
             errorsById        : null,
             id                : null,
+            
+            page: 1,
+            count: 0,
+            pageSize: 10,
+            pageSizes: [10, 30, 50,100],
+            search: null
         }
+        
     },
     /*watch:{
         tipoUbicacion (nuevoValor, valorAnterior){
@@ -189,10 +246,68 @@ export default {
     },*/
 
     mounted(){
-       this.getResults();
+       //this.getResults();
+    },
+    created(){
+      //this.getData(this.url);
+      this.retrieveTutorials();
+    },
+    computed:{
+     
+    },
+    methods: {
+      getRequestParams(search=null, page, pageSize) {
+      let params = {};
+
+      if (search) {
+        params["search"] = search;
+      }
+
+      /*if (page && page > 1) {
+        params["page"] = page - 1;
+      }else{
+        params['page'] = 1;
+      }*/
+
+      params["page"] = page;
+
+      if (pageSize) {
+        params["size"] = pageSize;
+      }
+
+      return params;
     },
 
-    methods: {
+    async retrieveTutorials() {
+      const params = this.getRequestParams(
+        //this.searchTitle,
+        this.search,
+        this.page,
+        this.pageSize
+      );
+
+        try {
+                const { data: resp }  = await ApiPublic.get('/kardex-articulos/',{params});
+                this.articulos = resp
+                this.count = resp.total
+                console.log(this.articulos,this.count);
+            }
+            catch( error ){
+                this.message = error.response.data.message
+            }
+    },
+
+    handlePageChange(value) {
+      this.page = value;
+      this.retrieveTutorials();
+    },
+
+    handlePageSizeChange(event) {
+      this.pageSize = event.target.value;
+      this.page = 1;
+      this.retrieveTutorials();
+    },
+
       async getResults(page = 1) {
             try {
                 const { data: resp }  = await ApiPublic.get('/kardex-articulos/?page='+page);
@@ -202,81 +317,48 @@ export default {
             catch( error ){
                 this.message = error.response.data.message
             }
-		  },
-      async getUbicacionById( id ){
+		  },    
+      async verDetalleTraslados( articulo, cantidad,ubicacion ) {
+        
+        this.articulo           = articulo;
+        this.articulo.cantidad  = cantidad;
+        this.articulo.ubicacion = ubicacion;
         try {
-                const { data: resp }  = await ApiPublic.get('ubicacion/'+id);
-                this.ubicacionById = resp.data
-                this.id = id
-                this.tipoUbicacionById = this.ubicacionById.tipo_ubicacion_id;
-            }
-            catch( error ){
-                this.messageById = error.response.data.message
-                this.errors      = error.response.data.errors
+          const { data:resp }  = await ApiPublic.get('detalle-traslado/articulo/'+articulo.id);
+               this.detalleTraslado = resp;
+
+               for( let i=0; i<this.detalleTraslado.data.length; i++ ){
+                  for( let k=0; k<this.articulo.kardex_ubicacion.length;k++){
+                       if( this.detalleTraslado.data[i].ubicacion_destino == this.articulo.kardex_ubicacion[k].ubicacion.id ){
+                          this.detalleTraslado.data[i].ubicacion_destino_nombre =  this.articulo.kardex_ubicacion[k].ubicacion.nombre;
+                          console.log('ok');
+                       }
+                       if( this.detalleTraslado.data[i].ubicacion_origen == this.articulo.kardex_ubicacion[k].ubicacion.id ){
+                          this.detalleTraslado.data[i].ubicacion_origen_nombre =  this.articulo.kardex_ubicacion[k].ubicacion.nombre;
+                          console.log('ok');
+                       }
+                    }
+                  
+               }
+               
+               console.log(this.detalleTraslado);
+               console.log(this.articulo);
+        } catch (error) {
+          console.log(error);
         }
-      },
-      
-      async listarTipoUbicacion(){
-          try {
-                const { data: resp }  = await ApiPublic.get('/tipo-ubicacion/?paginate=false');
-                this.tipoUbicacion = resp;
-            } catch ( error ){
-               this.message = error.response.data.message
-               this.errors  = error.response.data.errors
-            }
-      },
-      async showModal( id ) {
-        console.log('abrilModal' +id);
-        await this.getUbicacionById( id );
-        await this.listarTipoUbicacion();
         this.$root.$emit('bv::show::modal', 'modal', '#btnShow')
        
       },
       resetModal() {
-        this.messageById = null;
-        this.errorsById  = null;
-        console.log('cerrar modal');
+        this.articulo = null;
       },
-      checkFormValidity() {
-        const valid = this.$refs.form.checkValidity()
-        this.nameState = valid
-        return valid
-      },
-      handleOk(bvModalEvent) {
-        // Prevent modal from closing
-        bvModalEvent.preventDefault()
-        // Trigger submit handler
-        this.handleSubmit()
-      },
-      async handleSubmit() {
-      
-         // Exit when the form isn't valid
-         if (!this.checkFormValidity()) {
-          return
-        }
 
-        this.$nextTick(() => {
-          //this.$bvModal.hide('modal')
-        })
-        console.log('actualizar');
-        
-        try {
-                const { data: resp }  = await ApiPublic.put('/ubicacion/'+this.id,{
-                   nombre            : this.ubicacionById.nombre,
-                   codigo            : this.ubicacionById.codigo,
-                   direccion         : this.ubicacionById.direccion,
-                   tipo_ubicacion_id : this.tipoUbicacionById
-                });
-                this.messageById = resp;
-                this.errorsById  = null
-                await this.getResults();
-            } catch ( error ){
-               this.messageById = error.response.data
-               this.errorsById  = error.response.data.errors
-               
-            }
-        
-      }
+      formatoFecha( fecha ){
+        const date = new Date( fecha ).toLocaleDateString('en-GB');
+        return date;
+       },
+
+          
   }
   
 }

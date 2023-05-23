@@ -135,8 +135,13 @@
               <li class="nav-item">
                 <router-link class="nav-link" to="/articulos/listar/">Listar</router-link>
               </li>
+
               <li class="nav-item">
-                <router-link class="nav-link" to="/articulos/traslados/">Traslados</router-link>
+                <router-link class="nav-link" to="/articulos/traslados/crear">Crear Traslado</router-link>
+              </li>
+
+              <li class="nav-item">
+                <router-link class="nav-link" to="/articulos/traslados/listar">Listar Traslados</router-link>
               </li>
              
             </ul>

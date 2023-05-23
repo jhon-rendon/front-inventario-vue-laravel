@@ -2,7 +2,7 @@
   <section class="tables">
     <div class="page-header">
       <h3 class="page-title">
-        LISTAR ARTICULOS
+        LISTAR TRASLADOS
       </h3>
       <nav aria-label="breadcrumb">
         <ol class="breadcrumb">
@@ -10,7 +10,7 @@
             <a href="javascript:void(0);">Articulos</a>
           </li>
           <li class="breadcrumb-item active" aria-current="page">
-            Listado de Articulos
+            Listado de Traslados
           </li>
         </ol>
       </nav>
@@ -19,39 +19,41 @@
       <div class="col-lg-12 grid-margin stretch-card">
         <div class="card">
           <div class="card-body">
-            <template v-if="articulos.data">
+            <template v-if="traslados.data">
               <table class="table table-striped table-responsive">
                 <thead>
                   <tr>
                     <th scope="col">#Id</th>
+                    <th scope="col">Fecha</th>
+                    <th scope="col">Hora</th>
+                    <th scope="col">Articulo</th>
+                    <th scope="col">Ticket</th>
+                    <th scope="col">Descripción</th>
                     <th scope="col">Cantidad</th>
-                    <th scope="col">Ubicación</th>
-                    <th scope="col">Modelo</th>
-                    <th scope="col">Marca</th>
-                    <th scope="col">Serial</th>
-                    <th scope="col">Activo</th>
-                    <th scope="col">Categoria</th>
+                    <th scope="col">Origen</th>
+                    <th scope="col">Destino</th>
+                    <th scope="col">Estado</th>
                     <th></th>
                   </tr>
                 </thead>
-                <tbody v-for="item in articulos.data" :key="item.id">
-                  <tr v-for=" item2 in item.kardex_ubicacion" :key="item2.nombre">  
+                <tbody v-for="item in traslados.data" :key="item.id">
+                  <tr>  
                     
-                  <th scope="row" v-if="item2.cantidad > 0">{{ item.id }}</th>
-                  <td v-if="item2.cantidad > 0"> <span v-if="item2.cantidad"> 
+                  <th scope="row" >{{ item.id }}</th>
+                  <td > 
                          {{ item2.cantidad }}
-                        </span>
+                        
                   </td>
-                  <td v-if="item2.cantidad > 0"> <span>
+                  <td > <span>
                           {{ item2.ubicacion.nombre }}
                         </span> 
                     </td>
-                    <td v-if="item2.cantidad > 0">{{ item.modelo }}</td>
-                    <td v-if="item2.cantidad > 0">{{ item.marcas.nombre }}</td>
-                    <td v-if="item2.cantidad > 0">{{ item.serial }}</td>
-                    <td v-if="item2.cantidad > 0">{{ item.activo }}</td>
-                    <td v-if="item2.cantidad > 0">{{ item.subcategoria.categoria.nombre }} {{ item.subcategoria.nombre }}</td>
-                    <td v-if="item2.cantidad > 0">
+                    <td >{{ item.modelo }}</td>
+                    <td >{{ item.marcas.nombre }}</td>
+                    <td >{{ item.serial }}</td>
+                    <td >{{ item.activo }}</td>
+                    <td >{{ item.subcategoria.categoria.nombre }} {{ item.subcategoria.nombre }}</td>
+                    <td >
 
                       <router-link :to="{ name: 'traslado-articulo',params: {id : item.id, idUbicacion: item2.id },props: true}"
                           title="trasladar"
@@ -61,21 +63,23 @@
                       >
                       <i class="mdi mdi-ribbon"></i>
                       </router-link>
-                      <!---<button
+                     <button
                        title="trasladar"
                         type="button"
                         class="btn"
                         @click="showModal( item.id  )"
                       >
                         <i class="mdi mdi-ribbon"></i>
-                      </button>-->
-                    </td> 
+                      </button>
+                    </td>
+                  
+                   </tr></tbody>
              
-                  </tr>
-                </tbody>
+                 
+                
               </table>
               <pagination
-                :data="articulos"
+                :data="traslados"
                 @pagination-change-page="getResults"
               ></pagination>
             </template>
@@ -87,71 +91,7 @@
     </div>
     <div>
 
-      <b-modal
-        id="modal"
-        ref="modal"
-        title="Editar Ubicación"
-        ok-title="Actualizar"
-        cancel-title="Cancelar"
-        @ok="handleOk"
-        @show="resetModal"
-        @hidden="resetModal"
-      >
-        <form ref="form" @submit.stop.prevent="handleSubmit">
-         
-          <b-form-group
-            label="Tipo de Ubicación"
-            label-for="tipoUbicacion"
-            invalid-feedback="El Tipo de Ubicación es requerido"
-          >
-          <select class="form-control" v-model="tipoUbicacionById" required>
-            <option 
-                v-for="item in tipoUbicacion" :key="item.id"
-                :value="item.id" 
-                >
-                {{ item.tipo }}
-            </option>
-          </select>
-          <!--<div class="is-invalid" v-if="errorsById.tipo_ubicacion_id">{{ errorsById.tipo_ubicacion_id[0] }}</div>-->
-         </b-form-group>
-          
-          <b-form-group
-            label="Nombre"
-            label-for="nombre"
-          >
-            <b-form-input
-              id="nombre"
-              v-model="ubicacionById.nombre"
-            ></b-form-input>
-          <div class="is-invalid" v-if="errorsById && errorsById.nombre">{{ errorsById.nombre[0] }}</div>
-          </b-form-group>
-          <b-form-group
-            label="Codigo"
-            label-for="codigo"
-          >
-            <b-form-input
-              id="codigo"
-              v-model="ubicacionById.codigo"
-            ></b-form-input>
-          </b-form-group> 
-
-          
-          <b-form-group
-            label="Dirección"
-            label-for="direccion"
-          >
-            <b-form-input
-              id="direccion"
-              v-model="ubicacionById.direccion"
-            ></b-form-input>
-            
-          </b-form-group>
-        </form>
-        <template v-if="messageById">
-          <div v-if="messageById.success" class="alert alert-success" role="alert">{{ this.messageById.message }}</div>
-          <div v-else class="alert alert-danger" role="alert">{{ this.messageById.message }}</div>
-        </template> 
-      </b-modal>
+    
     </div>
   </section>
 </template>
@@ -164,14 +104,14 @@ import Spinner   from '@/components/loading/Spinner.vue'
 
 export default {
 
-    name: "ListarUbicaciones",
+    name: "ListarTraslados",
     components: {
       Spinner
     },
 
     data() {
         return {
-            articulos         : {},
+            traslados         : {},
             message           : null,
             errors            : {},
             ubicacionById     : {},
@@ -195,9 +135,9 @@ export default {
     methods: {
       async getResults(page = 1) {
             try {
-                const { data: resp }  = await ApiPublic.get('/kardex-articulos/?page='+page);
-                this.articulos = resp
-                console.log(this.articulos);
+                const { data: resp }  = await ApiPublic.get('/traslado-articulos/?page='+page);
+                this.traslados = resp
+                console.log(this.traslados);
             }
             catch( error ){
                 this.message = error.response.data.message
