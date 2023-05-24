@@ -164,9 +164,7 @@
                     :options="ubicaciones"
                     class="select"
                     :disabled="sucessForm"
-                    :getOptionLabel="item => ( item.codigo )? 'Codigo: '+item.codigo+' | ' : ''    
-                                        + 'Tipo: '+item.tipo_ubicacion.tipo  
-                                        + '| Ubicación: '+item.nombre "
+                    :getOptionLabel="viewUbicacion"
                   />
                   <template v-else>
                     <b-spinner variant="primary" label="Spinning"></b-spinner>
@@ -322,6 +320,15 @@ export default {
     },
     methods: {
       
+      viewUbicacion( item ){
+         let ubicacion = "";
+        if ( item.codigo ){
+          ubicacion+="Codigo: "+item.codigo +" | ";
+        }  
+        ubicacion+='Tipo: '+item.tipo_ubicacion.tipo  + '| Ubicación: '+item.nombre;
+        
+        return ubicacion;
+      },
       redirectArticulo(){
         this.$router.push({ name: 'listar-articulo' })
       },

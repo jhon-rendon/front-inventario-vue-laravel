@@ -122,8 +122,10 @@
               prev-text="Anterior"
               next-text="Siguiente"
               @change="handlePageChange"
-            ></b-pagination>
-             
+              pills
+            >
+            </b-pagination>
+            
             </template>
 
             <Spinner v-else />

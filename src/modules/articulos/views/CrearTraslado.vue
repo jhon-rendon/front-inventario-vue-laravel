@@ -21,6 +21,84 @@
           <div class="card-body">
 
            
+            <table class="table table-bordered table-responsive" style="height:500px">
+              <thead>
+                <tr>
+                  <th>Ubicación</th>
+                  <th>Categoria</th>
+                  <th>Articulo</th>
+                  <th>Marca</th>
+                  <th>Activo</th>
+                  <th>Serial</th>
+                  <th>Cantidad Disponible</th>
+                  <th>Destino</th>
+                  <th>Cantidad a Trasladar</th>
+                  <th>Descripcion</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <!--<td style="width: 20%;">
+                    <v-select
+                    v-if="articulos_disponibles"
+                    v-model.trim="articulos.ubicacion"
+                    :options="articulos_disponibles"
+                    class="select"
+                    :getOptionLabel="item => viewUbicacion(item)"
+                    :disabled="articulos_disponibles.length == 0"
+                    />
+                  </td>-->
+                  <td style="width: 20%;">
+                    <v-select
+                    v-if="ubicaciones"
+                    v-model.trim="articulos.tipo_ubicacion"
+                    :options="ubicaciones"
+                    class="select"
+                    :getOptionLabel="item => item.tipo "
+                    
+                    />
+                    </br>
+                    <v-select
+                    v-if="ubicacionesByTipo"
+                    v-model.trim="articulos.ubicacion"
+                    :options="ubicacionesByTipo"
+                    class="select"
+                    :getOptionLabel="item => item.nombre"
+                    />
+                  </td>
+
+                  
+                  <td style="width: 20%;">
+                    <v-select
+                    v-if="subcategoria"
+                    v-model.trim="articulos.subcategoria"
+                    :options="subcategoria"
+                    class="select"
+                    :getOptionLabel="item => item.categoria.nombre + ' '+ item.nombre "
+                    />
+                  </td>
+                  <td>
+                    <v-select
+                    v-if="articulos_disponibles"
+                    
+                    :options="articulos_disponibles"
+                    class="select"
+                    :getOptionLabel="item => item.serial || item.kardex_ubicacion[0].cantidad "
+                    />
+
+                  </td>
+                  <td></td>
+                  <td></td>
+                  <td></td>
+                  <td></td>
+                  <td></td>
+                  <td></td>
+                  <td></td>
+                </tr>
+              </tbody>
+            </table>
+            
+
             <form @submit.prevent="registrar">
              
            
@@ -223,7 +301,7 @@ export default {
 
   data() {
         return {
-           articulo :{
+           articulos :{
                 descripcion        : null,
                 ubicacion_destino  : null,
                 estado             : null,
@@ -232,9 +310,14 @@ export default {
                 cantidad           : null,
                 ticket             : null,
                 id                 : null,
+                ubicacion          : null,
+                tipo_ubicacion     : null,
+                subcategoria       : null,
             },
+            subcategoria        : null,
             articuloById        : null,
             kardeUbicacionById  : null,
+            ubicacionesByTipo   : null,
             sucessForm    : false,
             tipoCantidad  :  null,
             message       :  null,
@@ -246,7 +329,37 @@ export default {
                              { id: 1,  nombre:'Baja' },
                             ],
             loading       : true,
+            articulos_disponibles: null,
         }
+    },
+    watch:{
+      async 'articulos.tipo_ubicacion'( valor ){
+        console.log( valor );
+        if(valor && valor.ubicacion ){
+
+          this.ubicacionesByTipo = valor.ubicacion;
+        }
+        /*try {
+                const { data: resp }  = await ApiPublic.get('/kardex-articulos-disponibles?subcategoria='+valor.id);
+                this.articulos_disponibles = resp;
+                console.log(this.articulos_disponibles);
+            } catch ( error ){
+               this.message = error.response.data.message
+               this.errors  = error.response.data.errors
+            }
+      }*/
+      },
+      async 'articulos.subcategoria'( valor ){
+        console.log(valor,this.ubicacionesByTipo[0].id );
+        try {
+                const { data: resp }  = await ApiPublic.get('/kardex-articulos-disponibles?subcategoria='+valor.id+'&ubicacion='+this.ubicacionesByTipo[0].id);
+                this.articulos_disponibles = resp;
+                console.log(this.articulos_disponibles);
+            } catch ( error ){
+               this.message = error.response.data.message
+               this.errors  = error.response.data.errors
+            }
+      }
     },
 
     validations() {
@@ -279,8 +392,39 @@ export default {
      mounted(){
        
     },
+    created(){
+      this.listarSubcategorias();
+      this.listarUbicaciones();
+    },
 
     methods: {
+
+      viewUbicacion(item){
+
+        let string = '';
+        for (const kubc of item.kardex_ubicacion) {
+              if( kubc.cantidad > 0)
+              { 
+                string+='Serial:'+item.serial+'- Ub: '+kubc.ubicacion.nombre;
+                return string;
+                  break;
+              } 
+        }
+
+        return 'Serial:'+item.serial;
+      },
+
+      async listarSubcategorias(){
+          try {
+                const { data: resp }  = await ApiPublic.get('/subcategoria-articulos/?paginate=false');
+                this.subcategoria = resp;
+                console.log(this.subcategoria);
+            } catch ( error ){
+               this.message = error.response.data.message
+               this.errors  = error.response.data.errors
+            }
+          
+        },
       showAlert() {
         this.$swal.fire(
           'Success!',
@@ -416,7 +560,7 @@ export default {
 
         async listarUbicaciones( ) {
             try {
-                const { data: resp }  = await ApiPublic.get('/ubicacion/?paginate=false');
+                const { data: resp }  = await ApiPublic.get('/tipo-ubicacion/?paginate=false');
                 this.ubicaciones = resp
                 console.log(this.ubicaciones);
             }
@@ -431,5 +575,14 @@ export default {
 
 <style setup>
 
+.v-select.dropdown {
+  width: 450px;
+}
+.v-select .selected-tag {
+  position: absolute;
+}
+.v-select input.form-control {
+  width: 100%;
+}
 
 </style>
