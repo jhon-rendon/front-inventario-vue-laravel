@@ -102,6 +102,9 @@
                 <div class="is-invalid" v-if="errors.activo">{{ errors.activo[0] }}</div>
               </div>
 
+        
+
+
             </template>
 
             <template v-else-if="tipoCantidad == 'lote' " >
@@ -144,8 +147,7 @@
                         <div class="is-invalid" v-if="!$v.articulos.ubicacion_destino.required"> La ubicacion Destino es Requerida</div>        
                 </template>
             </div>
-
-            
+                   
             <div class="form-group">
                 <label>Estado Articulo </label>
                 <select  class="form-control" 
@@ -163,6 +165,7 @@
                 </template>
             </div>
 
+           
             
             <div class="form-group">
                 <label>Ticket</label>
@@ -182,7 +185,7 @@
             <button type="submit" class="btn btn-primary">Crear</button>
           
             </form>
-
+           
             <div v-if="message">
                     {{ message }}
             </div>
@@ -265,7 +268,9 @@ export default {
           required,
         },
         estado:{
-          required,
+          required: requiredIf(function ( value ) {
+            return ( this.tipoCantidad === 'unidad' )
+           }),
         }
       },
       }

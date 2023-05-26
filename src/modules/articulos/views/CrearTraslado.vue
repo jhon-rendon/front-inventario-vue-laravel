@@ -22,36 +22,74 @@
 
            
             <table class="table table-bordered table-responsive" style="height:500px">
-              <thead>
+              <thead class="thead-dark">
                 <tr>
-                  <th>Ubicación</th>
+                  <th>Item</th>
+                  <th>Origen</th>
                   <th>Categoria</th>
                   <th>Articulo</th>
-                  <th>Marca</th>
+                  <!--<th>Marca</th>-->
                   <th>Activo</th>
                   <th>Serial</th>
-                  <th>Cantidad Disponible</th>
+                  <th>Cantidad </br>Disponible</th>
                   <th>Destino</th>
-                  <th>Cantidad a Trasladar</th>
+                  <th>Cantidad a </br>Trasladar</th>
                   <th>Descripcion</th>
                 </tr>
               </thead>
-              <tbody>
-                <tr>
-                  <!--<td style="width: 20%;">
-                    <v-select
-                    v-if="articulos_disponibles"
-                    v-model.trim="articulos.ubicacion"
-                    :options="articulos_disponibles"
-                    class="select"
-                    :getOptionLabel="item => viewUbicacion(item)"
-                    :disabled="articulos_disponibles.length == 0"
-                    />
-                  </td>-->
-                  <td style="width: 20%;">
+              <tbody v-for="(item, index ) in articulos " :key="index">
+                <tr v-if="articulos.length > 0">
+                 
+                  <td>{{ index  +1  }} </td>
+                  <td  class="col">
                     <v-select
                     v-if="ubicaciones"
-                    v-model.trim="articulos.tipo_ubicacion"
+                    v-model.trim="item.tipo_ubicacion"
+                    :options="ubicaciones"
+                    class="select"
+                    :getOptionLabel="item => item.tipo "
+                    @input="selectTipoUbicacion( index, item )"
+                    />
+                    </br>
+                    <v-select
+                    v-if="ubicacionesByTipo[index]"
+                    v-model.trim="item.ubicacion"
+                    :options="ubicacionesByTipo[index]"
+                    class="select"
+                    :getOptionLabel="item => item.nombre"
+                    />
+                  </td>
+
+                  
+                  <td class="col">
+                    <v-select
+                    v-if="subcategoria"
+                    v-model.trim="articulos[index]['subcategoria']"
+                    :options="subcategoria"
+                    class="select"
+                    :getOptionLabel="item => item.categoria.nombre + ' '+ item.nombre "
+                    @input="selectSubcategoria( index, item )"
+                    />
+                  </td>
+                  <td class="col">
+                    <v-select
+                    v-if="articulos_disponibles[index]"
+                    v-model.trim="item.cantidad"
+                    :options="articulos_disponibles[index]"
+                    class="select"
+                    :getOptionLabel="item => getDetalleArticulo( item ) "
+                    />
+
+                  </td>
+                  <!--<td> <template> {{ articulos.marca }}</template></td>-->
+                  <td></td>
+                  <td>  {{ item.serial }} </td>
+                  <td></td>
+                  <td class="col">
+                   
+                    <v-select
+                    v-if="ubicaciones_destino"
+                    v-model.trim="item.tipo_ubicacion_destino"
                     :options="ubicaciones"
                     class="select"
                     :getOptionLabel="item => item.tipo "
@@ -59,220 +97,28 @@
                     />
                     </br>
                     <v-select
-                    v-if="ubicacionesByTipo"
-                    v-model.trim="articulos.ubicacion"
-                    :options="ubicacionesByTipo"
+                    v-if="ubicacionesByTipoDestino"
+                    v-model.trim="item.ubicacion_destino"
+                    :options="ubicacionesByTipoDestino"
                     class="select"
                     :getOptionLabel="item => item.nombre"
                     />
-                  </td>
-
-                  
-                  <td style="width: 20%;">
-                    <v-select
-                    v-if="subcategoria"
-                    v-model.trim="articulos.subcategoria"
-                    :options="subcategoria"
-                    class="select"
-                    :getOptionLabel="item => item.categoria.nombre + ' '+ item.nombre "
-                    />
-                  </td>
-                  <td>
-                    <v-select
-                    v-if="articulos_disponibles"
-                    
-                    :options="articulos_disponibles"
-                    class="select"
-                    :getOptionLabel="item => item.serial || item.kardex_ubicacion[0].cantidad "
-                    />
+                
 
                   </td>
-                  <td></td>
-                  <td></td>
-                  <td></td>
-                  <td></td>
-                  <td></td>
                   <td></td>
                   <td></td>
                 </tr>
               </tbody>
+              <tfoot>
+                <tr>
+                  <td colspan="10"> <button class="btn btn-info" @click="addRow()">Agregar Fila </button></td>
+                </tr>
+              </tfoot>
             </table>
             
 
-            <form @submit.prevent="registrar">
-             
            
-             <table class="table table-bordered" v-if=" articuloById && kardeUbicacionById.data.cantidad > 0 ">
-               <tr>
-                <th> Marca </th>
-                <td> <span v-if="articuloById.marcas">{{  articuloById.marcas.nombre }}</span> </td>
-               </tr>
-               <tr>
-                <th> Modelo </th>
-                <td> <span v-if="articuloById.modelo">{{  articuloById.modelo }}</span> </td>
-               </tr>
-               <tr>
-                <th> Serial </th>
-                <td> <span v-if="articuloById.serial"> {{  articuloById.serial }} </span> </td>
-               </tr>
-
-               <tr>
-                <th> Activo </th>
-                <td> <span v-if="articuloById.activo">{{  articuloById.activo }} </span> </td>
-               </tr>
-
-               <tr>
-                <th> Ticket </th>
-                <td> 
-                  <div class="form-group">
-                    <input
-                      type="text"
-                      class="form-control"
-                      placeholder="Ingrese el Ticket"
-                      v-model="articulo.ticket"
-                      :disabled="sucessForm"
-                    />
-                    <div class="is-invalid" v-if="errors.ticket">{{ errors.ticket[0] }}</div>
-
-                    <template v-if="$v.articulo.ticket.$error && $v.articulo.ticket.$dirty">
-                      <div class="is-invalid" v-if="!$v.articulo.ticket.required"> El ticket es Requerido.</div>       
-                      <div class="is-invalid" v-if="!$v.articulo.ticket.numeric"> El ticket debe ser Numérico</div>    
-                    </template>
-                </div>
-                </td>
-               </tr>
-
-               
-               <tr>
-                <th> Descripción </th>
-                <td> 
-                  <div class="form-group">
-                    <input
-                      type="text"
-                      class="form-control"
-                      placeholder="Ingrese la descripcion"
-                      v-model="articulo.descripcion"
-                      :disabled="sucessForm"
-                    />
-                    <div class="is-invalid" v-if="errors.ticket">{{ errors.ticket[0] }}</div>
-                </div>
-                </td>
-               </tr>
-
-               <tr>
-                <th> Cantidad Disponible</th>
-                <td> {{  kardeUbicacionById.data.cantidad }} </td>
-               </tr>
-
-               
-               <tr>
-                <th> Cantidad a Trasladar</th>
-                <td>  
-                  <span v-if="kardeUbicacionById.data.cantidad > 0 && kardeUbicacionById.data.cantidad == 1"> 1 </span>
-              
-                  <div v-else class="form-group" :class="{ 'form-group--error': $v.articulo.cantidad.$error }"> 
-                    <input
-                      type="number"
-                      class="form-control"
-                      placeholder="Ingrese la Cantidad"
-                      v-model.trim="$v.articulo.cantidad.$model"
-                      :disabled="sucessForm"
-                    />
-                    
-                    <div class="is-invalid" v-if="errors.cantidad "> {{ errors.cantidad[0] }} </div>
-                    
-                    <template v-if="$v.articulo.cantidad.$error && $v.articulo.cantidad.$dirty">
-                      <div class="is-invalid" v-if="!$v.articulo.cantidad.required"> La cantidad es Requerida.</div>
-                      <div class="is-invalid" v-if="!$v.articulo.cantidad.between">  La cantidad debe ser mayor que 0 y menor o igual al disponible</div>
-                      
-                    </template>
-                  </div>
-                </td>
-               </tr>
-
-               <tr>
-                <th> Categoria  </th>
-                <td> 
-                  {{  articuloById.subcategoria.categoria.nombre }} 
-                  {{  articuloById.subcategoria.nombre }} 
-                </td>
-               </tr>
-
-              <tr>
-                <th> Estado Actual Articulo</th>
-                <th> </th>
-              </tr>
-               <tr>
-                <th> Estado Articulo a Trasladar  </th>
-                <td> 
-                 
-                    <div class="form-group">
-                      <select  class="form-control" 
-                              v-model="articulo.estado" 
-                              :disabled="sucessForm"
-                              >
-                          <option 
-                          v-for="item in estados" :key="item.nombre"
-                          :value="item.id">
-                            {{ item.nombre }}   
-                          </option>
-                      </select>
-                      <div class="is-invalid" v-if="errors.estado">{{ errors.estado[0] }}</div>
-
-                      <template v-if="$v.articulo.estado.$error && $v.articulo.estado.$dirty">
-                        <div class="is-invalid" v-if="!$v.articulo.estado.required"> El estado es Requerido</div>   
-                    </template>
-                  </div>
-                </td>
-               </tr>
-
-
-               <tr>
-                <th> Ubicacion  Actual </th>
-                <td>  {{ kardeUbicacionById.data.ubicacion.nombre  }} </td>
-               </tr>
-
-               <tr>
-                <th> Ubicación Destino  </th>
-                <td>  
-                  <select  class="form-control" 
-                         v-model="articulo.ubicacion_destino" 
-                         :disabled="sucessForm"
-                         >
-                    <option 
-                     v-for="item in ubicaciones" :key="item.id"
-                    :value="item.id">
-                       {{  ( item.codigo )? 'Codigo: '+item.codigo+' | ' : '' }}   
-                       {{ 'Tipo: '+item.tipo_ubicacion.tipo }} 
-                       {{ '| Ubicación: '+item.nombre }}
-                    </option>
-                </select>
-                <div class="is-invalid" v-if="errors.ubicacion_destino">{{ errors.ubicacion_destino[0] }}</div>
-
-                  <template v-if="$v.articulo.ubicacion_destino.$error && $v.articulo.ubicacion_destino.$dirty">
-                        <div class="is-invalid" v-if="!$v.articulo.ubicacion_destino.required"> La ubicacion Destino es Requerida</div>
-                       <div class="is-invalid" v-if="!$v.articulo.ubicacion_destino.validateDistinct"> La ubicacion Destino Debe ser diferente a la actual</div>
-                           
-                   </template>
-
-                </td>
-               </tr>
-               <tr>
-                <td colspan="2" style="text-align: center;"> 
-                  <button type="submit" class="btn btn-primary" v-if="!sucessForm">Trasladar</button> 
-                </td>
-               </tr>
-             </table>
-
-             <div v-else-if="!loading">
-                <template v-if="kardeUbicacionById.data.cantidad == 0">
-                  No Hay Cantidad Disponible
-                </template>
-             </div>
-
-             <Spinner v-if="loading"/>
-          
-            </form>
 
             <div v-if="message">
                     {{ message }}
@@ -301,7 +147,7 @@ export default {
 
   data() {
         return {
-           articulos :{
+           articulo :{
                 descripcion        : null,
                 ubicacion_destino  : null,
                 estado             : null,
@@ -312,28 +158,36 @@ export default {
                 id                 : null,
                 ubicacion          : null,
                 tipo_ubicacion     : null,
+                tipo_ubicacion_destino     : null,
                 subcategoria       : null,
-            },
+                marca              : null,
+                serial             : null,
+                cantidad_disponible:null,
+            }, 
+            articulos           : [],
             subcategoria        : null,
             articuloById        : null,
-            kardeUbicacionById  : null,
-            ubicacionesByTipo   : null,
+            kardeUbicacionById  : [],
+            ubicacionesByTipo   : [],
+            ubicacionesByTipoDestino:null,
             sucessForm    : false,
             tipoCantidad  :  null,
             message       :  null,
             errors        :  {},
             ubicaciones   :  null,
+            ubicaciones_destino : null,
             estados       : [{  id: 1, nombre:'Nuevo' },
                              {  id: 2, nombre:'Usado'},
                              { id: 3,  nombre:'Reparado'},
                              { id: 1,  nombre:'Baja' },
                             ],
             loading       : true,
-            articulos_disponibles: null,
+            articulos_disponibles: [],
+            countRegistros : 10
         }
     },
     watch:{
-      async 'articulos.tipo_ubicacion'( valor ){
+      /*async 'articulos.tipo_ubicacion'( valor ){
         console.log( valor );
         if(valor && valor.ubicacion ){
 
@@ -348,18 +202,38 @@ export default {
                this.errors  = error.response.data.errors
             }
       }*/
+      /*},
+      async 'articulos.tipo_ubicacion_destino'( valor ){
+        if(valor && valor.ubicacion ){
+          this.ubicacionesByTipoDestino = valor.ubicacion;
+        }
       },
       async 'articulos.subcategoria'( valor ){
-        console.log(valor,this.ubicacionesByTipo[0].id );
-        try {
-                const { data: resp }  = await ApiPublic.get('/kardex-articulos-disponibles?subcategoria='+valor.id+'&ubicacion='+this.ubicacionesByTipo[0].id);
-                this.articulos_disponibles = resp;
-                console.log(this.articulos_disponibles);
-            } catch ( error ){
-               this.message = error.response.data.message
-               this.errors  = error.response.data.errors
-            }
-      }
+        if( valor ){
+          console.log(valor,this.ubicacionesByTipo[0].id );
+          try {
+                  const { data: resp }  = await ApiPublic.get('/kardex-articulos-disponibles?subcategoria='+valor.id+'&ubicacion='+this.ubicacionesByTipo[0].id);
+                  this.articulos_disponibles = resp;
+                  console.log(this.articulos_disponibles);
+              } catch ( error ){
+                this.message = error.response.data.message
+                this.errors  = error.response.data.errors
+              }
+        }
+      },
+      'articulos.cantidad'( value ){
+        if( value ){ 
+         // console.log( value );
+          this.articulos.cantidad = value
+          this.articulos.marca = value.marcas.nombre
+          this.articulos.serial    = ( value.serial ) ? value.serial : null
+          //this.cantidad_disponible = value.
+          console.log( this.articulos.cantidad );
+        }
+      }*/
+    },
+    computed:{
+     
     },
 
     validations() {
@@ -393,12 +267,66 @@ export default {
        
     },
     created(){
+      this.articulosInicial();
       this.listarSubcategorias();
       this.listarUbicaciones();
     },
 
     methods: {
 
+      articulosInicial(){
+
+        for(let i=0; i<=4; i++ ){
+          this.articulos.push( {...this.articulo} );
+        }
+        console.log( this.articulos);
+      },
+       addRow(){
+        this.articulos.push( {...this.articulo } );
+      },
+
+      async selectTipoUbicacion( index, item ){
+        
+         this.ubicacionesByTipo[index] = item.tipo_ubicacion.ubicacion;
+        
+        /*try {
+                const { data: resp }  = await ApiPublic.get('/kardex-articulos-disponibles?subcategoria='+id);
+                this.articulos_disponibles = resp;
+                console.log(this.articulos_disponibles);
+            } catch ( error ){
+               this.message = error.response.data.message
+               this.errors  = error.response.data.errors
+            }*/
+      },
+      async selectSubcategoria( index, item ){
+
+        let subcategoria = item.subcategoria.id
+        let ubicacion    = item.tipo_ubicacion.ubicacion[0].id;
+          try {
+                 const { data: resp }  = await ApiPublic.get('/kardex-articulos-disponibles?subcategoria='+subcategoria+'&ubicacion='+ubicacion);
+                 this.articulos_disponibles[index] = resp;
+                console.log(this.articulos_disponibles[index]);
+            } catch ( error ){
+               this.message = error.response.data.message
+               this.errors  = error.response.data.errors
+          }
+      },
+
+      getDetalleArticulo( item ){
+
+        let marca =  item.marcas.nombre
+        if( !item.serial ){
+          let cantidades = null;
+          for( const element  of item.kardex_ubicacion ){
+              if( element.cantidad > 0 ){
+                  return 'Cantidad :' +element.cantidad +' | Marca:' +marca
+              }
+          }
+        }
+        else{
+           return 'Serial: '+item.serial+' | Marca:' +marca
+        }
+      },
       viewUbicacion(item){
 
         let string = '';
@@ -562,6 +490,7 @@ export default {
             try {
                 const { data: resp }  = await ApiPublic.get('/tipo-ubicacion/?paginate=false');
                 this.ubicaciones = resp
+                this.ubicaciones_destino = resp
                 console.log(this.ubicaciones);
             }
             catch( error ){
@@ -575,14 +504,11 @@ export default {
 
 <style setup>
 
-.v-select.dropdown {
-  width: 450px;
+.select {
+  width: 150px !important;
+  max-height: 60px !important;
+  font-size: 11px;
 }
-.v-select .selected-tag {
-  position: absolute;
-}
-.v-select input.form-control {
-  width: 100%;
-}
+    
 
 </style>

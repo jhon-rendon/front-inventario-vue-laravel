@@ -125,7 +125,7 @@
               pills
             >
             </b-pagination>
-            
+
             </template>
 
             <Spinner v-else />
@@ -197,7 +197,7 @@
                   <b-td> {{ item.cantidad }}</b-td>
                   <b-td> <span v-if="item.ubicacion_origen > 0"> {{ item.ubicacion_origen_nombre }} </span></b-td>
                   <b-td> {{ item.ubicacion_destino_nombre }}</b-td>
-                  <b-td> {{ item.estado_articulo.estado }}</b-td>
+                  <b-td> {{ ( item.estado_articulo ) ? item.estado_articulo.estado : '' }}</b-td>
               </b-tr>
              </tbody>    
         </b-table-simple >
