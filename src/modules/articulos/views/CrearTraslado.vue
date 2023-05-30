@@ -20,8 +20,8 @@
         <div class="card">
           <div class="card-body">
 
-           
-            <table class="table table-bordered table-responsive" style="height:500px">
+           <form @submit.prevent="">
+            <table class="table table-bordered table-responsive" style="min-height:500px">
               <thead class="thead-dark">
                 <tr>
                   <th>Item</th>
@@ -34,6 +34,7 @@
                   <th>Cantidad </br>Disponible</th>
                   <th>Destino</th>
                   <th>Cantidad a </br>Trasladar</th>
+                  <th>Ticket</th>
                   <th>Descripcion</th>
                 </tr>
               </thead>
@@ -57,6 +58,7 @@
                     :options="ubicacionesByTipo[index]"
                     class="select"
                     :getOptionLabel="item => item.nombre"
+                    @input="selectUbicacion( index, item )"
                     />
                   </td>
 
@@ -64,7 +66,7 @@
                   <td class="col">
                     <v-select
                     v-if="subcategoria"
-                    v-model.trim="articulos[index]['subcategoria']"
+                    v-model.trim="item.subcategoria"
                     :options="subcategoria"
                     class="select"
                     :getOptionLabel="item => item.categoria.nombre + ' '+ item.nombre "
@@ -73,18 +75,33 @@
                   </td>
                   <td class="col">
                     <v-select
-                    v-if="articulos_disponibles[index]"
-                    v-model.trim="item.cantidad"
-                    :options="articulos_disponibles[index]"
+                    v-if="item.articulos_disponibles"
+                    v-model.trim="item.articulo_seleccionado"
+                    :options="item.articulos_disponibles"
                     class="select"
-                    :getOptionLabel="item => getDetalleArticulo( item ) "
-                    />
+                    :getOptionLabel="element => getDetalleArticulo( element ) "
+                    @input=" SelectionArticulo( index, item )" 
+                 />
 
                   </td>
                   <!--<td> <template> {{ articulos.marca }}</template></td>-->
-                  <td></td>
-                  <td>  {{ item.serial }} </td>
-                  <td></td>
+                  <td> <template v-if="item.subcategoria && item.articulo_seleccionado"> 
+                        {{ item.articulo_seleccionado.activo  || 'N/A' }} 
+                       </template>
+                  </td>
+                  <td>  <template v-if="item.subcategoria && item.articulo_seleccionado">
+                          {{ item.articulo_seleccionado.serial || 'N/A' }}
+                        </template> 
+                  </td>
+                  <td> 
+                    <template v-if="item.subcategoria && item.articulo_seleccionado ">
+                      <template v-if=" item.subcategoria.tipo_cantidad == 'unidad'"> 1 </template>
+                      <template v-if=" item.subcategoria.tipo_cantidad =='lote'"> 
+                        {{  item.cantidad_disponible  }}
+                      </template>
+                    </template>
+                  
+                  </td>
                   <td class="col">
                    
                     <v-select
@@ -106,8 +123,36 @@
                 
 
                   </td>
-                  <td></td>
-                  <td></td>
+                  <td>
+                    <template v-if="item.subcategoria && item.articulo_seleccionado ">
+                      <template v-if=" item.subcategoria.tipo_cantidad == 'unidad'"> 1 </template>
+                      
+                      <template v-else >
+                        <template v-if=" item.subcategoria.tipo_cantidad =='lote' "> 
+                            <b-form-input 
+                                          v-model.trim.number="item.cantidad" 
+                                          type="text"
+                                          :state="!$v.articulos.$each[index].cantidad.$error"
+                                          @keyup="validarCantidad( index, item )"
+                                          style="width:80px">
+                              </b-form-input>
+                              <b-form-invalid-feedback v-if="!$v.articulos.$each[index].cantidad.required">Requerido</b-form-invalid-feedback>
+                              <b-form-invalid-feedback v-if="!$v.articulos.$each[index].cantidad.numeric">Debe ser Numérico</b-form-invalid-feedback>
+                              <b-form-invalid-feedback v-if="!$v.articulos.$each[index].cantidad.minValue">Debe ser Mayor que 0</b-form-invalid-feedback>
+                              <b-form-invalid-feedback v-if="!$v.articulos.$each[index].cantidad.isvalidCantidad">Insuficiente</b-form-invalid-feedback>
+                              
+                              
+                              
+                        </template>  
+                        <template v-else> 1 </template>
+                      </template>
+                      
+                     </template>
+                  </td>
+                  <td> <b-form-input v-model="item.ticket" type="text" style="width:80px"></b-form-input></td>
+                  <td>
+                    <b-form-textarea v-model="item.descripcion" style="width:180px"></b-form-textarea>
+                  </td>
                 </tr>
               </tbody>
               <tfoot>
@@ -116,7 +161,7 @@
                 </tr>
               </tfoot>
             </table>
-            
+          </form>
 
            
 
@@ -162,7 +207,10 @@ export default {
                 subcategoria       : null,
                 marca              : null,
                 serial             : null,
-                cantidad_disponible:null,
+                cantidad_disponible: null,
+                cantidad_real      : null,
+                articulos_disponibles: null,
+                articulo_seleccionado:null,
             }, 
             articulos           : [],
             subcategoria        : null,
@@ -186,81 +234,26 @@ export default {
             countRegistros : 10
         }
     },
-    watch:{
-      /*async 'articulos.tipo_ubicacion'( valor ){
-        console.log( valor );
-        if(valor && valor.ubicacion ){
-
-          this.ubicacionesByTipo = valor.ubicacion;
-        }
-        /*try {
-                const { data: resp }  = await ApiPublic.get('/kardex-articulos-disponibles?subcategoria='+valor.id);
-                this.articulos_disponibles = resp;
-                console.log(this.articulos_disponibles);
-            } catch ( error ){
-               this.message = error.response.data.message
-               this.errors  = error.response.data.errors
-            }
-      }*/
-      /*},
-      async 'articulos.tipo_ubicacion_destino'( valor ){
-        if(valor && valor.ubicacion ){
-          this.ubicacionesByTipoDestino = valor.ubicacion;
-        }
-      },
-      async 'articulos.subcategoria'( valor ){
-        if( valor ){
-          console.log(valor,this.ubicacionesByTipo[0].id );
-          try {
-                  const { data: resp }  = await ApiPublic.get('/kardex-articulos-disponibles?subcategoria='+valor.id+'&ubicacion='+this.ubicacionesByTipo[0].id);
-                  this.articulos_disponibles = resp;
-                  console.log(this.articulos_disponibles);
-              } catch ( error ){
-                this.message = error.response.data.message
-                this.errors  = error.response.data.errors
-              }
-        }
-      },
-      'articulos.cantidad'( value ){
-        if( value ){ 
-         // console.log( value );
-          this.articulos.cantidad = value
-          this.articulos.marca = value.marcas.nombre
-          this.articulos.serial    = ( value.serial ) ? value.serial : null
-          //this.cantidad_disponible = value.
-          console.log( this.articulos.cantidad );
-        }
-      }*/
-    },
-    computed:{
-     
-    },
-
     validations() {
       return {
-      articulo: {
-        cantidad:{
-           required: requiredIf(function ( value ) {
-            return ( this.kardeUbicacionById.data.cantidad > 1 )
-           }),
-           numeric,
-           minValue: minValue(1),
-           between (value) {
-            return between(1, this.kardeUbicacionById.data.cantidad)(value)
+      
+        articulos: {
+          $each: {
+            cantidad:{ 
+              required:requiredIf(function ( item ) {
+                  return ( item.cantidad_disponible > 1 )
+              }),
+              numeric,
+              minValue: minValue(1),
+              isvalidCantidad(currItem, itemArr) {
+               return ( itemArr.cantidad_disponible >= itemArr.cantidad )
+              }
+            },
+            ticket:{
+              numeric
             }
-        },
-        ticket:{
-          required,
-          numeric,
-        },
-        ubicacion_destino:{
-          required,
-          validateDistinct : () => ( this.kardeUbicacionById.data.ubicacion.id !== this.articulo.ubicacion_destino )
-        },
-        estado:{
-          required,
+          }
         }
-      },
       }
     }, 
      mounted(){
@@ -287,46 +280,152 @@ export default {
 
       async selectTipoUbicacion( index, item ){
         
-         this.ubicacionesByTipo[index] = item.tipo_ubicacion.ubicacion;
+         this.articulos[index].articulos_disponibles = null
+         this.articulos[index].articulo_seleccionado = null
+         //this.articulos[index].subcategoria          = null
+         this.articulos[index].ubicacion             = null
         
-        /*try {
-                const { data: resp }  = await ApiPublic.get('/kardex-articulos-disponibles?subcategoria='+id);
-                this.articulos_disponibles = resp;
-                console.log(this.articulos_disponibles);
-            } catch ( error ){
-               this.message = error.response.data.message
-               this.errors  = error.response.data.errors
-            }*/
+         this.ubicacionesByTipo[index] = item.tipo_ubicacion.ubicacion;
       },
-      async selectSubcategoria( index, item ){
 
-        let subcategoria = item.subcategoria.id
-        let ubicacion    = item.tipo_ubicacion.ubicacion[0].id;
+      async selectUbicacion( index, item ){
+        
+        this.ubicacionesByTipo[index] = item.tipo_ubicacion.ubicacion;
+        await this.getKardexArticulosDisponibles( index, item )
+     },
+      
+      async selectSubcategoria( index, item ){
+         
+        await this.getKardexArticulosDisponibles( index, item )
+      },
+
+      async getKardexArticulosDisponibles( index, item ){
+        
+        this.articulos[index].articulos_disponibles = null
+        this.articulos[index].articulo_seleccionado = null
+        
+        let subcategoria = ( item.subcategoria) ? item.subcategoria.id : null
+        let ubicacion    = ( item.tipo_ubicacion.ubicacion[0] ) ? item.tipo_ubicacion.ubicacion[0].id : null;
+      
+        this.$v.$touch();
+
+        if( subcategoria && ubicacion ){
+      
           try {
-                 const { data: resp }  = await ApiPublic.get('/kardex-articulos-disponibles?subcategoria='+subcategoria+'&ubicacion='+ubicacion);
-                 this.articulos_disponibles[index] = resp;
-                console.log(this.articulos_disponibles[index]);
-            } catch ( error ){
-               this.message = error.response.data.message
-               this.errors  = error.response.data.errors
-          }
+                const { data: resp }  = await ApiPublic.get('/kardex-articulos-disponibles?subcategoria='+subcategoria+'&ubicacion='+ubicacion);
+                if( resp.length > 0){
+                  
+                  const newResp = resp.filter(({ id }) => 
+                      !this.articulos.some( articulo => { 
+                        
+                          if( articulo.articulo_seleccionado ){
+                            if( articulo.articulo_seleccionado.kardex_ubicacion[0].cantidad > 1 ){
+                              return;
+                            }else{
+                              return ((articulo.articulo_seleccionado)?articulo.articulo_seleccionado.id : null) == id
+                            }
+                          } 
+                        }));
+
+                       this.articulos[index].articulos_disponibles = newResp;
+                }
+              } 
+          catch ( error ){
+                this.message = error.response.data.message
+                this.errors  = error.response.data.errors
+            }
+         }
       },
 
       getDetalleArticulo( item ){
-
-        let marca =  item.marcas.nombre
-        if( !item.serial ){
-          let cantidades = null;
-          for( const element  of item.kardex_ubicacion ){
-              if( element.cantidad > 0 ){
-                  return 'Cantidad :' +element.cantidad +' | Marca:' +marca
-              }
+      
+        if( item ){
+          let marca =  item.marcas.nombre
+          if( !item.serial ){
+            for( const element  of item.kardex_ubicacion ){
+                if( element.cantidad > 0 ){
+                    return 'Cantidad :' +element.cantidad +' | Marca:' +marca
+                }
+            }
+          }
+          else{
+            return 'Serial: '+item.serial+' | Marca:' +marca
           }
         }
-        else{
-           return 'Serial: '+item.serial+' | Marca:' +marca
+      },
+
+      SelectionArticulo( index, item ){
+        if( item.articulo_seleccionado ){
+         
+         const buscarElemento = this.articulos.find( (element,indice )  => {
+               if( element.articulo_seleccionado ){
+                 return ( element.articulo_seleccionado.id === item.articulo_seleccionado.id && indice !== index )
+                } 
+         });
+
+         if( buscarElemento ){
+           
+          if( buscarElemento.articulo_seleccionado.kardex_ubicacion[0].cantidad == 1 ){
+              
+                this.articulos[index].articulo_seleccionado = null
+                console.log('el articulo ya ha sido seleccionado');
+                this.showErrorAlert( 'El articulo ya ha sido seleccionado ');
+            }
+            else{
+              this.articulos[index].cantidad_disponible   = buscarElemento.articulo_seleccionado.kardex_ubicacion[0].cantidad
+              this.articulos[index].cantidad_real         = buscarElemento.articulo_seleccionado.kardex_ubicacion[0].cantidad
+            }
+         }else{
+          this.articulos[index].cantidad_disponible =  item.articulo_seleccionado.kardex_ubicacion[0].cantidad
+          this.articulos[index].cantidad_real       =  item.articulo_seleccionado.kardex_ubicacion[0].cantidad
+         }
         }
       },
+
+      validarCantidad( index, item ){
+        let acumulado = 0;
+        this.$v.$touch();
+        this.articulos.map( (element,indice)  => {
+              //console.log(element); 
+              
+              if( element.articulo_seleccionado ){
+                
+                if ( element.articulo_seleccionado.id === item.articulo_seleccionado.id && indice !== index ){
+                      
+                      if( element.cantidad && element.cantidad >=1 ){
+                         acumulado+= element.cantidad ;
+                      }
+                }
+
+                if ( element.articulo_seleccionado.id === item.articulo_seleccionado.id ){
+
+                  if( element.cantidad === '' || !element.cantidad  ){
+                    //this.articulos[index].cantidad_disponible = Number( acumulado  )
+                  }
+                  else{
+                    acumulado+= Number( element.cantidad );
+                  }
+                }
+              }
+        
+         });
+
+         this.articulos.map( (element,indice)  => {
+              if( element.articulo_seleccionado ){
+                
+                if ( element.articulo_seleccionado.id === item.articulo_seleccionado.id && indice !== index ){
+                      element.cantidad_disponible-= Number( acumulado )   
+                }
+              }
+      });
+         
+         
+         console.log(acumulado,this.articulos[index].cantidad_disponible);
+         this.articulos[index].cantidad_disponible-= Number( acumulado )   
+         //console.log(a);   
+
+      },
+
       viewUbicacion(item){
 
         let string = '';
