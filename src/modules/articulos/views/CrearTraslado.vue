@@ -20,7 +20,9 @@
         <div class="card">
           <div class="card-body">
 
-           <form @submit.prevent="">
+           <form @submit.prevent="registrar()">
+
+           
             <table class="table table-bordered table-responsive" style="min-height:500px">
               <thead class="thead-dark">
                 <tr>
@@ -32,7 +34,7 @@
                   <th>Activo</th>
                   <th>Serial</th>
                   <th>Cantidad </br>Disponible</th>
-                  <th>Destino</th>
+                  <!--<th>Destino</th>-->
                   <th>Cantidad a </br>Trasladar</th>
                   <th>Ticket</th>
                   <th>Descripcion</th>
@@ -102,7 +104,7 @@
                     </template>
                   
                   </td>
-                  <td class="col">
+                  <!--<td class="col">
                    
                     <v-select
                     v-if="ubicaciones_destino"
@@ -122,7 +124,7 @@
                     />
                 
 
-                  </td>
+                  </td>-->
                   <td>
                     <template v-if="item.subcategoria && item.articulo_seleccionado ">
                       <template v-if=" item.subcategoria.tipo_cantidad == 'unidad'"> 1 </template>
@@ -133,7 +135,6 @@
                                           v-model.trim.number="item.cantidad" 
                                           type="text"
                                           :state="!$v.articulos.$each[index].cantidad.$error"
-                                          @keyup="validarCantidad( index, item )"
                                           style="width:80px">
                               </b-form-input>
                               <b-form-invalid-feedback v-if="!$v.articulos.$each[index].cantidad.required">Requerido</b-form-invalid-feedback>
@@ -161,8 +162,51 @@
                 </tr>
               </tfoot>
             </table>
+
+            
+            <div class="row" style="margin-top: 10px;">
+              
+              <div class="col-5"></div>
+              <div class="col-5">
+              <strong>Destino </strong>
+             
+                <v-select
+                        v-if="ubicaciones_destino"
+                        v-model.trim="tipo_ubicacion_destino"
+                        :options="ubicaciones"
+                        class="select"
+                        :getOptionLabel="item => item.tipo "
+                        />
+              </div>
+            </div>
+
+            <div class="row" style="margin-top: 10px;">
+              <div class="col-5"></div>
+              <div class="col-5">
+                <v-select
+                          v-if="ubicacionByTipo"
+                          v-model.trim="ubicacion_destino"
+                          :options="ubicacionByTipo"
+                          class="select"
+                          :getOptionLabel="item => item.nombre"
+                          />
+                </div>
+            </div>
+            
+            <template v-if="$v.ubicacion_destino.$error && $v.ubicacion_destino.$dirty">
+              <div class="is-invalid" v-if="!$v.ubicacion_destino.required" style="text-align: center;"> El Destino es Requerido</div>
+            </template>
+
+            <div class="row" style="margin-top: 20px;">
+              <div class="col-12" style="text-align: center;">
+                  <button class="btn btn-primary">Crear Traslado</button>
+              </div> 
+            </div>
+           
+
           </form>
 
+         
            
 
             <div v-if="message">
@@ -224,6 +268,9 @@ export default {
             errors        :  {},
             ubicaciones   :  null,
             ubicaciones_destino : null,
+            ubicacion_destino   : null,
+            ubicacionByTipo     : null,
+            tipo_ubicacion_destino: null,
             estados       : [{  id: 1, nombre:'Nuevo' },
                              {  id: 2, nombre:'Usado'},
                              { id: 3,  nombre:'Reparado'},
@@ -234,9 +281,19 @@ export default {
             countRegistros : 10
         }
     },
+    watch:{
+      tipo_ubicacion_destino( value , old){
+         if( value ){
+          this.ubicacionByTipo = value.ubicacion;
+         }
+      }
+    },
     validations() {
       return {
-      
+        ubicacion_destino:{
+          required
+        },
+    
         articulos: {
           $each: {
             cantidad:{ 
@@ -253,7 +310,7 @@ export default {
               numeric
             }
           }
-        }
+        }  
       }
     }, 
      mounted(){
@@ -307,7 +364,7 @@ export default {
         let subcategoria = ( item.subcategoria) ? item.subcategoria.id : null
         let ubicacion    = ( item.tipo_ubicacion.ubicacion[0] ) ? item.tipo_ubicacion.ubicacion[0].id : null;
       
-        this.$v.$touch();
+        //this.$v.$touch();
 
         if( subcategoria && ubicacion ){
       
@@ -319,11 +376,11 @@ export default {
                       !this.articulos.some( articulo => { 
                         
                           if( articulo.articulo_seleccionado ){
-                            if( articulo.articulo_seleccionado.kardex_ubicacion[0].cantidad > 1 ){
+                            /*if( articulo.articulo_seleccionado.kardex_ubicacion[0].cantidad > 1 ){
                               return;
-                            }else{
+                            }else{*/
                               return ((articulo.articulo_seleccionado)?articulo.articulo_seleccionado.id : null) == id
-                            }
+                            //}
                           } 
                         }));
 
@@ -365,24 +422,30 @@ export default {
 
          if( buscarElemento ){
            
-          if( buscarElemento.articulo_seleccionado.kardex_ubicacion[0].cantidad == 1 ){
+          //if( buscarElemento.articulo_seleccionado.kardex_ubicacion[0].cantidad == 1 ){
               
                 this.articulos[index].articulo_seleccionado = null
                 console.log('el articulo ya ha sido seleccionado');
                 this.showErrorAlert( 'El articulo ya ha sido seleccionado ');
-            }
+            /*}
             else{
               this.articulos[index].cantidad_disponible   = buscarElemento.articulo_seleccionado.kardex_ubicacion[0].cantidad
               this.articulos[index].cantidad_real         = buscarElemento.articulo_seleccionado.kardex_ubicacion[0].cantidad
-            }
+            }*/
          }else{
+          this.$v.$touch();
           this.articulos[index].cantidad_disponible =  item.articulo_seleccionado.kardex_ubicacion[0].cantidad
-          this.articulos[index].cantidad_real       =  item.articulo_seleccionado.kardex_ubicacion[0].cantidad
+          if( this.articulos[index].subcategoria.tipo_cantidad === 'unidad'){
+              this.articulos[index].cantidad = 1
+              this.articulos[index].cantidad_disponible =  1
+
+          }
+          //this.articulos[index].cantidad_real       =  item.articulo_seleccionado.kardex_ubicacion[0].cantidad
          }
         }
       },
 
-      validarCantidad( index, item ){
+      /*validarCantidad( index, item ){
         let acumulado = 0;
         this.$v.$touch();
         this.articulos.map( (element,indice)  => {
@@ -424,7 +487,7 @@ export default {
          this.articulos[index].cantidad_disponible-= Number( acumulado )   
          //console.log(a);   
 
-      },
+      },*/
 
       viewUbicacion(item){
 
@@ -483,6 +546,34 @@ export default {
                  return;
             }
 
+
+            let paramsArticulo = [];
+            this.articulos.filter( articulo => { 
+                      
+                    let { articulo_seleccionado,cantidad,ticket,ubicacion,descripcion } = articulo;
+                    if( articulo_seleccionado && cantidad >=1 ) 
+                    { 
+                        paramsArticulo.push(
+                          {
+                            articulo_id     : articulo_seleccionado.id,
+                            cantidad ,
+                            id_subcategoria : articulo_seleccionado.subcategoria_articulos_id,
+                            ubicacion_origen: ubicacion.id,
+                            ticket ,        
+                            descripcion ,  
+                            estado:1, 
+                          }
+                        )
+                        return true;
+                    }
+            });
+
+            if( !paramsArticulo || paramsArticulo.length === 0){
+                this.showErrorAlert('Debe diligenciar por lo menos un articulo a trasladar');
+                return;
+            }
+
+               
             this.$swal.fire({
               title: 'Realmente desea realizar el traslado?',
               text: "",
@@ -500,33 +591,39 @@ export default {
                     try {
                       const { data: resp }  = await ApiPublic.post('/traslado-articulos',
                       { 
-               
-                        descripcion        : this.articulo.descripcion,
+                         articulo: paramsArticulo,
+                         ubicacion_destino: this.ubicacion_destino.id,
+                         
+
+
+                        /*descripcion        : this.articulo.descripcion,
                         ubicacion_destino  : this.articulo.ubicacion_destino,
                         estado             : this.articulo.estado,
                         articulo_id        : this.id,
                         ubicacion_origen   : this.kardeUbicacionById.data.ubicacion.id,
                         usuario_id         : 1,
                         cantidad           : ( this.kardeUbicacionById.data.cantidad > 1 )? this.articulo.cantidad : 1,
-                        ticket             : this.articulo.ticket,
+                        ticket             : this.articulo.ticket,*/
                       });
                     
                     const { message }     = resp;
                     this.message  = message;
 
-                    this.kardeUbicacionById.data.cantidad -= this.articulo.cantidad
+                   // this.kardeUbicacionById.data.cantidad -= this.articulo.cantidad
                     this.limpiarCampos()
                     this.sucessForm = true
                     this.showAlert() 
                   
                 } catch ( error ){
 
-                  this.message = error.response.data.message
-                  this.errors  = error.response.data.errors
-                  showErrorAlert( this.errors );
+                  /*this.message = error.response.data.message
+                  this.errors  = error.response.data.errors*/
+                  console.log(error);
+                  console.log(this.error.response);
+                  this.showErrorAlert( this.error.response );
                   
                 }
-              
+                
               }
             });
             
