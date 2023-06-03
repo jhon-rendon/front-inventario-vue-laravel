@@ -34,6 +34,12 @@ export default {
         },
 
         {
+          path: 'ubicacion/listar',
+          name: 'listar-articulos-ubicacion',
+          component: () => import(/* webpackChunkName: listar-articulo */ '@/modules/articulos/views/ArticuloUbicacion.vue')
+        },
+
+        {
           path: 'traslados/listar',
           name: 'listar-traslados',
           component: () => import(/* webpackChunkName: listar-articulo */ '@/modules/articulos/views/ListarTraslados.vue')

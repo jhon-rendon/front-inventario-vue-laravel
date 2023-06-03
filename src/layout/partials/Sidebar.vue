@@ -143,6 +143,10 @@
               <li class="nav-item">
                 <router-link class="nav-link" to="/articulos/traslados/listar">Listar Traslados</router-link>
               </li>
+
+              <li class="nav-item">
+                <router-link class="nav-link" to="/articulos/ubicacion/listar">Articulos por Ubicación</router-link>
+              </li>
              
             </ul>
           </b-collapse>

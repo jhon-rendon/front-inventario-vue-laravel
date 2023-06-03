@@ -358,17 +358,20 @@ export default {
               if ( result.value ) {
 
                     try {
+                      let articulo = [{
+                          descripcion        : this.articulo.descripcion,
+                          estado             : this.articulo.estado,
+                          articulo_id        : this.id,
+                          ubicacion_origen   : this.kardeUbicacionById.data.ubicacion.id,
+                          usuario_id         : 1,
+                          cantidad           : ( this.kardeUbicacionById.data.cantidad > 1 )? this.articulo.cantidad : 1,
+                          ticket             : this.articulo.ticket,
+                        }];
+                        
                       const { data: resp }  = await ApiPublic.post('/traslado-articulos',
                       { 
-               
-                        descripcion        : this.articulo.descripcion,
                         ubicacion_destino  : ( this.articulo.ubicacion_destino ) ? this.articulo.ubicacion_destino.id : null,
-                        estado             : this.articulo.estado,
-                        articulo_id        : this.id,
-                        ubicacion_origen   : this.kardeUbicacionById.data.ubicacion.id,
-                        usuario_id         : 1,
-                        cantidad           : ( this.kardeUbicacionById.data.cantidad > 1 )? this.articulo.cantidad : 1,
-                        ticket             : this.articulo.ticket,
+                        articulo
                       });
                     
                     const { message }     = resp;

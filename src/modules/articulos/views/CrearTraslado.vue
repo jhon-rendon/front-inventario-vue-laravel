@@ -62,6 +62,14 @@
                     :getOptionLabel="item => item.nombre"
                     @input="selectUbicacion( index, item )"
                     />
+
+                    <template v-if="errors['articulo.'+index+'.ubicacion_origen']">
+                      <div class="is-invalid" v-for=" (item_error,item_error_index) in errors['articulo.'+index+'.ubicacion_origen']" :key="item_error_index">
+                        {{ errors['articulo.'+index+'.ubicacion_origen'][item_error_index] }}
+                      </div>
+                    </template>
+                    
+
                   </td>
 
                   
@@ -142,6 +150,11 @@
                               <b-form-invalid-feedback v-if="!$v.articulos.$each[index].cantidad.minValue">Debe ser Mayor que 0</b-form-invalid-feedback>
                               <b-form-invalid-feedback v-if="!$v.articulos.$each[index].cantidad.isvalidCantidad">Insuficiente</b-form-invalid-feedback>
                               
+                              <template v-if="errors['articulo.'+index+'.cantidad']">
+                              <div class="is-invalid" v-for=" (item_error,item_error_index) in errors['articulo.'+index+'.cantidad']" :key="item_error_index">
+                                {{ errors['articulo.'+index+'.cantidad'][item_error_index] }}
+                              </div>
+                              </template>
                               
                               
                         </template>  
@@ -150,7 +163,10 @@
                       
                      </template>
                   </td>
-                  <td> <b-form-input v-model="item.ticket" type="text" style="width:80px"></b-form-input></td>
+                  <td> 
+                    <b-form-input v-model.trim.number="item.ticket" type="text" style="width:80px"></b-form-input>
+                    <div class="is-invalid" v-if="!$v.articulos.$each[index].ticket.numeric">Debe ser Numérico </div>
+                  </td>
                   <td>
                     <b-form-textarea v-model="item.descripcion" style="width:180px"></b-form-textarea>
                   </td>
@@ -208,10 +224,21 @@
 
          
            
+            <div style="text-align: center;">
+              <div v-if="message">
+                      {{ message }}
+              </div> 
 
-            <div v-if="message">
-                    {{ message }}
-            </div>  
+              <!--<div v-if="errors && Object.keys(errors).length > 0">
+                <ul>
+                  <li v-for="(error, field) in errors" :key="field">
+                    {{ error[0] }} 
+                  </li>
+                </ul>
+              </div> 
+              -->
+            </div>
+
           </div>
         </div>
       </div>
@@ -326,10 +353,11 @@ export default {
 
       articulosInicial(){
 
+        this.articulos = [];
+
         for(let i=0; i<=4; i++ ){
           this.articulos.push( {...this.articulo} );
         }
-        console.log( this.articulos);
       },
        addRow(){
         this.articulos.push( {...this.articulo } );
@@ -557,7 +585,7 @@ export default {
                           {
                             articulo_id     : articulo_seleccionado.id,
                             cantidad ,
-                            id_subcategoria : articulo_seleccionado.subcategoria_articulos_id,
+                            //id_subcategoria : articulo_seleccionado.subcategoria_articulos_id,
                             ubicacion_origen: ubicacion.id,
                             ticket ,        
                             descripcion ,  
@@ -616,11 +644,18 @@ export default {
                   
                 } catch ( error ){
 
-                  /*this.message = error.response.data.message
-                  this.errors  = error.response.data.errors*/
-                  console.log(error);
-                  console.log(this.error.response);
-                  this.showErrorAlert( this.error.response );
+                 
+                  this.errors  = error.response.data.errors
+                  if( this.errors ){
+                    this.message = "Error Al validar los datos enviados"
+                    this.showErrorAlert( this.message );
+                  }
+                  else{
+                    this.showErrorAlert( this.error.response );
+                  }
+                  console.log( this.message);
+                  console.log(this.errors );
+                 
                   
                 }
                 
@@ -647,6 +682,8 @@ export default {
             },*/
             this.tipoCantidad = null
             this.errors = {}
+            this.articulosInicial();
+            //this.ubicacion_destino =
         },
 
 
